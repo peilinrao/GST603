@@ -9,6 +9,7 @@ FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
 EOF = "\0\0\0"
 DONE = "\n\n\n"
+FAIL = "\b\b\b"
 
 # globals
 list_of_clients = []
@@ -46,32 +47,28 @@ def receiveFile(conn, addr, name):
         cloud_files.append(name)
     print "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
     broadcast("\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n", conn) # tell all clients a cloud file has been uploaded
-    conn.send("\nFile uploaded")
+    conn.send(DONE)
 
 '''
-sendFile(conn, addr, name):
-DESCRIPTION: send a file from client (* not completed)
-INPUT:       conn: socket of the client
-             addr: IP address of the client
-             name: name of the outgoing file
+sendFile(f, conn):
+DESCRIPTION: upload file to server
+INPUT:       file handler
 OUTPUT:      none
-SIDEEFFECTS: send the target file to the client
+SIDEEFFECTS: upload the file to server
 '''
-def sendFile(conn, addr, name):
+def sendFile(f, conn):
     try:
-        f = open(name, "rb")
-        while True:
-            package = f.read(2048)
+        package = f.read(1024)
+        while package:
+            conn.send("\b"+package)
+            package = f.read(1024)
+            conn.recv(10)
 
-            if not package:  # done reading
-                break
-
-            conn.send(package)
-
-        f.close()
-
+        conn.send(EOF)
+        print "File downloaded by " + user_name_dict[conn]
     except:
-        conn.send(FILE_NO_EXIST)
+        print "errrrr"
+        return
 
 '''
 clientthread(conn, addr):
@@ -83,7 +80,7 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n:q to quit the chatroom, :uf to upload cloud files:)")
+    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n:h for help :)")
     broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
     broadcast(broadcast_m, conn)
     conn.send("\0")
@@ -100,23 +97,35 @@ def clientthread(conn, addr):
                             continue
                     elif message == FILE_REQUEST: # the client wants the file
                         # give user the cloud file directory
-                        print "Choose from cloud file blow:"
+                        print "User requesting file..."
                         try:
-                            f = open("cloudFileDir.txt", "r")
+                            message = ""
+                            for elements in cloud_files:
+                                message += elements + "\n"
                             try:
+                                conn.send(message)
+                                message = conn.recv(3)    # wait for response
                                 message = conn.recv(1024)
                                 if message:
-                                    sendFile(conn, addr, name)
+                                    try:
+                                        f = open(message, "rb")
+                                        conn.send(DONE)
+                                        sendFile(f, conn)
+                                        f.close()
+                                    except:
+                                        conn.send(FAIL)
+                                        f.close()
                                 else:
                                     remove(conn)
                             except:
                                 continue
                         except:
-                            f.close()
                             conn.send(FILE_NO_EXIST)  # no cloud file available
                     else:
-                        print "<" + user_name_dict[conn] + "> " + message
+                        if message[0] == "\n" and message[1] == "\n":
+                            continue
                         message_to_send = "<" + user_name_dict[conn] + "> " + message
+                        print message_to_send
                         broadcast(message_to_send,conn)
                         #prints the message and address of the user who just sent the message on the server terminal
 

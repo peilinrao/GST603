@@ -10,6 +10,7 @@ FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
 EOF = "\0\0\0"
 DONE = "\n\n\n"
+FAIL = "\b\b\b"
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,7 +40,7 @@ SIDEEFFECTS: instructions for users to login correctly are printed on terminal
 '''
 def login():
     while True:
-        sys.stdout.write("Please login. To register, type in :S at user name.\n")
+        sys.stdout.write("Please login. To register, type in :S.\n")
         sys.stdout.write("User name:")
         sys.stdout.flush()
         usrName = sys.stdin.readline()
@@ -56,10 +57,10 @@ def login():
         server.send(usrName[:-1] + " " + password)
         message = server.recv(200)
         if message == "\b":
-            print "Password incorrect, please login again. Or enter :S in User name if you want to register."
+            print "Password incorrect."
             continue
         elif message == "\n":
-            print "User doesnot exist, please login again. Or enter :S in User name if you want to register."
+            print "User doesnot exist."
             continue
         else:
             print message
@@ -89,6 +90,31 @@ def create():
     server.send(usrName[:-1] + " " + password)
 
 '''
+receiveFile(name):
+DESCRIPTION: receive a file from client
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+             name: name of the uploaded file
+OUTPUT:      none
+SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
+             done. Notice other users about arrival of a file.
+'''
+def receiveFile(name):
+    f = open(name, "wb")
+    package = server.recv(2048)
+    server.send(DONE)
+    while package[0] == "\b":
+        f.write(package[1:])
+        # print package
+        package = server.recv(2048)
+        server.send(DONE)
+
+    f.close()
+    print name + " has been successfully downloaded"
+
+    # server.send(DONE)
+
+'''
 sendFile(f):
 DESCRIPTION: upload file to server
 INPUT:       file handler
@@ -100,10 +126,12 @@ def sendFile(f):
         package = f.read(1024)
         while package:
             server.send("\b"+package)
-            server.recv(10)
             package = f.read(1024)
+            server.recv(10)
 
         server.send(EOF)
+        server.recv(10)
+        print "File uploaded."
     except:
         print "errrrr"
         return
@@ -212,6 +240,23 @@ def main():
                     except:
                         print "\nNo such file."
                         f.close()
+
+                elif message == ":df\n":  # download file from cloud
+                    server.send(FILE_REQUEST)
+                    message = server.recv(2048)
+                    server.send(DONE)
+                    print "Please choose one file to donwload:\n" + message
+                    sys.stdout.flush()
+                    fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
+                    server.send(fileName)
+                    message = server.recv(3)
+                    if message == DONE:
+                        receiveFile(fileName)
+                    else:
+                        print "File reception failed :(" + message
+                elif message == ":h\n":  # user want help
+                    print '''":S":    register (can only be used when login)\n":uf":   upload file to the server\n":df":   download file from the server\n
+                          '''
                 else:
                     server.send(message[:-1])
                     sys.stdout.write("\033[A")
