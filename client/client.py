@@ -2,6 +2,14 @@ import socket
 import select
 import sys
 import getpass
+import time
+from time import sleep
+
+FILE_NO_EXIST = "\b\b"
+FILE_UPLOADING = "\0\0"
+FILE_REQUEST = "\n\n"
+EOF = "\0\0\0"
+DONE = "\n\n\n"
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,6 +71,20 @@ def create():
     password = getpass.getpass()
     sys.stdout.write("\n")
     server.send(usrName[:-1] + " " + password)
+
+def sendFile(f):
+    try:
+        package = f.read(1024)
+        while package:
+            server.send("\b"+package)
+            server.recv(10)
+            package = f.read(1024)
+
+        server.send(EOF)
+    except:
+        print "errrrr"
+        return
+
 
 def main():
     local_net_setting_created = 0
@@ -135,17 +157,38 @@ def main():
         for socks in read_sockets:
             if socks == server:
                 message = socks.recv(2048)
+                if message[0] == "\n":
+                    continue
                 print message
             else:
                 message = sys.stdin.readline()
-                if message == ":q\n":
+                if message == ":q\n":  # quit the chatroom
                     server.close()
                     sys.exit()
-                server.send(message[:-1])
-                sys.stdout.write("\033[A")
-                sys.stdout.write("<You> ")
-                sys.stdout.write(message)
-                sys.stdout.flush()
+
+                elif message == ":uf\n":  # upload file
+                    print "Type in the file name you want to upload: (please include the entire directory)"
+                    sys.stdout.flush()
+                    file_dir = sys.stdin.readline()[:-1]
+                    fileName = file_dir.split("/")
+                    # print file_dir
+                    try:
+                        f = open(file_dir, "rb")
+                        server.send(FILE_UPLOADING)
+                        sleep(0.01)
+                        server.send(fileName[-1])
+                        sleep(0.01)
+                        sendFile(f)
+                        f.close()
+                    except:
+                        print "\nNo such file."
+                        f.close()
+                else:
+                    server.send(message[:-1])
+                    sys.stdout.write("\033[A")
+                    sys.stdout.write("<You> ")
+                    sys.stdout.write(message)
+                    sys.stdout.flush()
 
     server.close()
 

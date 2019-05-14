@@ -6,28 +6,35 @@ import sys
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
+EOF = "\0\0\0"
+DONE = "\n\n\n"
 
 list_of_clients = []
+cloud_files = []
 user_name_dict = {}
 user_data_dict = {}
 
-def readFile(conn, addr, name):
+def receiveFile(conn, addr, name):
     f = open(name, "wb")
-    while True:
+    package = conn.recv(2048)
+    conn.send(DONE)
+    while package[0] == "\b":
+        f.write(package[1:])
+        # print package
         package = conn.recv(2048)
-
-        if not package: # done receiving the package
-            break
-
-        f.write(package)
+        conn.send(DONE)
 
     f.close()
 
     # update the directory
-    f = open("cloudFileDir.txt", "a+")
-    f.write(name + "\n")
-    f.close()
+    if name not in cloud_files:
+        f = open("cloudFileDir.txt", "a+")
+        f.write(name + "\n")
+        f.close()
+        cloud_files.append(name)
+    print "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
     broadcast("\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n", conn) # tell all clients a cloud file has been uploaded
+    conn.send("\nFile uploaded")
 
 def sendFile(conn, addr, name):
     try:
@@ -47,7 +54,7 @@ def sendFile(conn, addr, name):
 
 
 def clientthread(conn, addr):
-    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n")
+    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n:q to quit the chatroom, :uf to upload cloud files:)")
     broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
     broadcast(broadcast_m, conn)
     conn.send("\0")
@@ -59,7 +66,7 @@ def clientthread(conn, addr):
                     if message == FILE_UPLOADING: # a file is being uploaded
                         try:
                             fileName = conn.recv(2048) # read the file name
-                            readFile(conn, addr, fileName)
+                            receiveFile(conn, addr, fileName)
                         except:
                             continue
                     elif message == FILE_REQUEST: # the client wants the file
@@ -119,7 +126,20 @@ def readUsrData(input):
         temp = line.split()
         user_data_dict[temp[0]] = temp[1]
 
-    print user_data_dict
+    # print user_data_dict
+
+    f.close()
+
+def txtToList(input, list):
+    try:
+        f = open(input, "r")
+    except:
+        return
+
+    for line in f.readlines():
+        list.append(line[:-1])
+
+    # print user_data_dict
 
     f.close()
 
@@ -203,6 +223,7 @@ server.bind((IP_address, Port))
 server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
+txtToList("cloudFileDir.txt", cloud_files)
 print "GST603 server booted!"
 
 while True:
