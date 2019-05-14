@@ -89,7 +89,7 @@ def create():
     server.send(usrName[:-1] + " " + password)
 
 '''
-create():
+sendFile(f):
 DESCRIPTION: upload file to server
 INPUT:       file handler
 OUTPUT:      none
