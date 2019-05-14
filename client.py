@@ -82,16 +82,11 @@ def main():
         # Assume user is kind
         print(answer)
         if answer == "Y":
-            print("YES!")
             IP_address = str(lines[1 + index * 2][:-1])
             Port = int(lines[2 + index * 2])
-            print(IP_address, Port)
             server.connect((IP_address, Port))
-            print("connected!")
         elif answer == "N":
             raise IOError
-        else:
-            print "error"
     except:
         #with open("local_net_setting.txt", "w") as f:
         #    f.writelines(lines)
@@ -108,7 +103,6 @@ def main():
             sys.stdout.write("Port: ")
             sys.stdout.flush()
             port_temp = int(sys.stdin.readline()[:-1])
-
             try:
                 server.connect((ip_temp, port_temp))
             except:
@@ -119,7 +113,6 @@ def main():
             f.write(str(port_temp)+"\n")
             IP_address = ip_temp
             Port = port_temp
-            server.connect((ip_temp, port_temp))
             break
         f.close()
 
