@@ -50,7 +50,6 @@ def login():
             create()
             return
         password = getpass.getpass(prompt='>> Password: ')
-        sys.stdout.write("\n")
         server.send(usrName[:-1] + " " + password)
         message = server.recv(200)
         if message == "\b":
@@ -81,7 +80,6 @@ def create():
         sys.stdout.flush()
         usrName = sys.stdin.readline()
     password = getpass.getpass(prompt='>> Password: ')
-    sys.stdout.write("\n")
     server.send(usrName[:-1] + " " + password)
 
 '''
@@ -208,6 +206,8 @@ def main():
         for socks in read_sockets:
             if socks == server:
                 message = socks.recv(2048)
+                if message == "\n" or message == "\b" or message == "\0":
+                    continue
                 print message
             else:
                 message = sys.stdin.readline()

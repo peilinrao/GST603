@@ -84,7 +84,7 @@ SIDEEFFECTS: check for client activities on the server, including messages,
 '''
 def clientthread(conn, addr):
     conn.send(">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""")
-    broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom.\n"
+    broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
     broadcast(broadcast_m, conn)
     conn.send("\0")
     #sends a message to the client whose user object is conn
@@ -283,12 +283,12 @@ def signinpolling(conn, addr):
                                 list_of_clients.append(conn)
                                 user_name_dict[conn] = temp[0]
                                 start_new_thread(clientthread,(conn,addr))
-                                print ">> "+ temp[0] + " enters the chatroom\n"
+                                print ">> "+ temp[0] + " enters the chatroom."
                                 #prints the message and address of the user who just sent the message on the server terminal
                                 return
                             else:
                                 conn.send("\b")
-                                print ">> Password not correct for " + temp[0] + "\n"
+                                print ">> Password not correct for " + temp[0] + "."
                                 continue
                         else:
                             conn.send("\b\0")
@@ -353,16 +353,16 @@ while True:
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print ">> " + temp[0] + " enters the chatroom\n"
+                    print ">> " + temp[0] + " enters the chatroom."
 
                     #creates and individual thread for every user that connects
                 else:
                     conn.send("\b")
-                    print ">> Password not correct for " + temp[0] + "\n"
+                    print ">> Password not correct for " + temp[0] + "."
                     start_new_thread(signinpolling,(conn,addr))
             else:
                 conn.send("\n")
-                print ">> No existing user.\n"
+                print ">> No existing user."
                 start_new_thread(signinpolling,(conn,addr))
         else:
             start_new_thread(registerpolling,(conn,addr))
