@@ -249,7 +249,7 @@ def main():
                         else:
                             print ">> File reception failed :(" + message
                     elif message == ":h\n":  # user want help
-                        print '''>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>>":q": quit the chatroom.\n'''
+                        print '''>> [help]\n>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>> ":q": quit the chatroom.\n'''
                     else:
                         server.send(message[:-1])
                         sys.stdout.write("\033[A")
@@ -261,7 +261,7 @@ def main():
                         server.close()
                         sys.exit()
                     elif message == ":h\n":  # user want help
-                        print '''>> ":S": register (can only be used when login)\n>>":q": quit the chatroom.\n'''
+                        print '''>> [help]\n>> ":S": register (can only be used when login)\n>> ":q": quit the chatroom.\n'''
                     else:
                         server.send(message[:-1])
                         sys.stdout.write("\033[A")

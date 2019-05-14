@@ -172,7 +172,7 @@ SIDEEFFECTS: remove a user from online list
 '''
 def remove(connection):
     if connection in list_of_clients:
-        broadcast_m = ">> User " + user_name_dict[connection] + " exited the chatroom.\n"
+        broadcast_m = ">> User " + user_name_dict[connection] + " exited the chatroom."
         print broadcast_m
         broadcast(broadcast_m,connection)
         list_of_clients.remove(connection)
