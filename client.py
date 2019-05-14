@@ -1,6 +1,7 @@
 import socket
 import select
 import sys
+import getpass
 
 def login():
     while True:
@@ -13,10 +14,12 @@ def login():
             print "Creating new user..."
             create()
             return
-        sys.stdout.write("Password:")
-        sys.stdout.flush()
-        password = sys.stdin.readline()
-        server.send(usrName[:-1] + " " + password[:-1])
+        # sys.stdout.write("Password:")
+        # sys.stdout.flush()
+        password = getpass.getpass()
+        sys.stdout.write("\n")
+        print usrName[:-1] + " " + password
+        server.send(usrName[:-1] + " " + password)
 
 
         message = server.recv(200)
@@ -34,10 +37,11 @@ def create():
     sys.stdout.write("User name:")
     sys.stdout.flush()
     usrName = sys.stdin.readline()
-    sys.stdout.write("Password:")
-    sys.stdout.flush()
-    password = sys.stdin.readline()
-    server.send(usrName[:-1] + " " + password[:-1])
+    # sys.stdout.write("Password:")
+    # sys.stdout.flush()
+    password = getpass.getpass()
+    sys.stdout.write("\n")
+    server.send(usrName[:-1] + " " + password)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 IP_address = str(sys.argv[1])

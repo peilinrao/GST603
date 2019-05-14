@@ -17,7 +17,9 @@ def readUsrData(input):
 
     for line in f.readlines():
         temp = line.split()
-        user_data_dict[temp[0]] = temp[1][:-1]
+        user_data_dict[temp[0]] = temp[1]
+
+    # print user_data_dict
 
     f.close()
 
@@ -60,7 +62,7 @@ def signinpolling(conn, addr):
                     if message != "\b":
                         temp = message.split()
                         if temp[0] in user_data_dict:
-                            if temp[1][:-1] == user_data_dict[temp[0]]:
+                            if temp[1] == user_data_dict[temp[0]]:
                                 list_of_clients.append(conn)
                                 user_name_dict[conn] = temp[0]
                                 start_new_thread(clientthread,(conn,addr))
@@ -103,7 +105,7 @@ server.listen(100)
 readUsrData("user_data.txt")
 
 def clientthread(conn, addr):
-    conn.send("Welcome to this chatroom!")
+    conn.send("Welcome to this chatroom!\n")
     broadcast_m = "\n" + user_name_dict[conn] + " has entered chat room.\n"
     broadcast(broadcast_m, conn)
     conn.send("\0")
@@ -156,8 +158,8 @@ while True:
     if message:
         if message != "\b":
             temp = message.split()
-            if temp[0] in  user_data_dict:
-                if temp[1][:-1] == user_data_dict[temp[0]]:
+            if temp[0] in user_data_dict:
+                if temp[1] == user_data_dict[temp[0]]:
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
