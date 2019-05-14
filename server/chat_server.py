@@ -68,9 +68,9 @@ def sendFile(f, conn):
             conn.recv(10)
 
         conn.send(EOF)
-        print "File downloaded by " + user_name_dict[conn]
+        print ">> File downloaded by " + user_name_dict[conn]+ "."
     except:
-        print "errrrr"
+        print ">> [Error: file cannot be uploaded.]"
         return
 
 '''
@@ -83,8 +83,8 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n:h for help :)")
-    broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
+    conn.send(">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""")
+    broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom.\n"
     broadcast(broadcast_m, conn)
     conn.send("\0")
     #sends a message to the client whose user object is conn
@@ -100,7 +100,7 @@ def clientthread(conn, addr):
                             continue
                     elif message == FILE_REQUEST: # the client wants the file
                         # give user the cloud file directory
-                        print "User requesting file..."
+                        print ">> User requesting file..."
                         try:
                             message = ""
                             for elements in cloud_files:
@@ -152,7 +152,7 @@ def broadcast(message,connection):
                 clients.send(message)
             except:
                 clients.close()
-                print "Exception: cannot broadcast"
+                print ">> [Exception: cannot broadcast]"
 
                 remove(clients)
 
@@ -165,7 +165,7 @@ SIDEEFFECTS: remove a user from online list
 '''
 def remove(connection):
     if connection in list_of_clients:
-        broadcast_m = "\nUser " + user_name_dict[connection] + " exited the chatroom.\n"
+        broadcast_m = ">> User " + user_name_dict[connection] + " exited the chatroom.\n"
         print broadcast_m
         broadcast(broadcast_m,connection)
         list_of_clients.remove(connection)
@@ -255,7 +255,7 @@ def registerpolling(conn,addr):
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print temp[0] + " created and enters the chatroom\n"
+                    print ">> "+ temp[0] + " created and enters the chatroom\n"
                     #prints the message and address of the user who just sent the message on the server terminal
                     return
                 else:
@@ -283,17 +283,17 @@ def signinpolling(conn, addr):
                                 list_of_clients.append(conn)
                                 user_name_dict[conn] = temp[0]
                                 start_new_thread(clientthread,(conn,addr))
-                                print temp[0] + " enters the chatroom\n"
+                                print ">> "+ temp[0] + " enters the chatroom\n"
                                 #prints the message and address of the user who just sent the message on the server terminal
                                 return
                             else:
                                 conn.send("\b")
-                                print "Password not correct for " + temp[0] + "\n"
+                                print ">> Password not correct for " + temp[0] + "\n"
                                 continue
                         else:
                             conn.send("\b\0")
                             list_of_clients.remove(conn)
-                            print "No existing user.\n"
+                            print ">> No existing user.\n"
                             continue
                     else:
                         start_new_thread(registerpolling,(conn,addr))
@@ -330,7 +330,7 @@ server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
 txtToList("cloudFileDir.txt", cloud_files)
-print "GST603 server booted!"
+print ">> GST603 server booted!"
 
 while True:
     conn, addr = server.accept()
@@ -341,7 +341,7 @@ while True:
 
     # check for log in
 
-    print "\n" + addr[0] + " connected"
+    print ">> " + addr[0] + " connected"
     #maintains a list of clients for ease of broadcasting a message to all available people in the chatroom
     #Prints the address of the person who just connected
     message = conn.recv(200)
@@ -353,16 +353,16 @@ while True:
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print temp[0] + " enters the chatroom\n"
+                    print ">> " + temp[0] + " enters the chatroom\n"
 
                     #creates and individual thread for every user that connects
                 else:
                     conn.send("\b")
-                    print "Password not correct for " + temp[0] + "\n"
+                    print ">> Password not correct for " + temp[0] + "\n"
                     start_new_thread(signinpolling,(conn,addr))
             else:
                 conn.send("\n")
-                print "No existing user.\n"
+                print ">> No existing user.\n"
                 start_new_thread(signinpolling,(conn,addr))
         else:
             start_new_thread(registerpolling,(conn,addr))

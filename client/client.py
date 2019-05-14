@@ -28,7 +28,6 @@ def readNetSettings(input):
 
 
     # print user_data_dict
-
     f.close()
 
 '''
@@ -41,27 +40,24 @@ SIDEEFFECTS: instructions for users to login correctly are printed on terminal
 '''
 def login():
     while True:
-        sys.stdout.write("Please login. To register, type in :S.\n")
-        sys.stdout.write("User name:")
+        sys.stdout.write(">> Please login. To register, type in :S.\n")
+        sys.stdout.write(">> Username: ")
         sys.stdout.flush()
         usrName = sys.stdin.readline()
         if usrName == ":S\n":
             server.send("\b")
-            print "Creating new user... (Do not use :S as user name!!)"
+            print ">> Creating new user... (Do not use :S as user name!!)"
             create()
             return
-        # sys.stdout.write("Password:")
-        # sys.stdout.flush()
-        password = getpass.getpass()
+        password = getpass.getpass(prompt='>> Password: ')
         sys.stdout.write("\n")
-        # print usrName[:-1] + " " + password
         server.send(usrName[:-1] + " " + password)
         message = server.recv(200)
         if message == "\b":
-            print "Password incorrect."
+            print ">> Password incorrect."
             continue
-        elif message == NO_EXIST":
-            print "User doesnot exist."
+        elif message == NO_EXIST:
+            print ">> User doesnot exist."
             continue
         else:
             print message
@@ -80,13 +76,12 @@ def create():
     sys.stdout.flush()
     usrName = sys.stdin.readline()
     while usrName == ":S\n":
-        print "This is an invalid user name!"
-        sys.stdout.write("User name:")
+        print ">> This is an invalid user name!"
+        sys.stdout.write(">> Username: ")
         sys.stdout.flush()
         usrName = sys.stdin.readline()
-    # sys.stdout.write("Password:")
-    # sys.stdout.flush()
-    password = getpass.getpass()
+    sys.stdout.write(">> ")
+    password = getpass.getpass(prompt='>> Password: ')
     sys.stdout.write("\n")
     server.send(usrName[:-1] + " " + password)
 
@@ -132,9 +127,9 @@ def sendFile(f):
 
         server.send(EOF)
         server.recv(10)
-        print "File uploaded."
+        print ">> File uploaded."
     except:
-        print "errrrr"
+        print ">> [ERROR: Cannot upload file.] "
         return
 
 '''
@@ -152,12 +147,11 @@ def main():
         with open("local_net_setting.txt") as f:
             lines = f.readlines()
         local_net_setting_created = 1
-        print(lines)
         index = int(lines[0])
         if(len(lines) < 3):
             raise IOError
-        sys.stdout.write("Do you want to use the default IP address and port? \n")
-        sys.stdout.write("Yes(Y)/No(N): ")
+        sys.stdout.write(">> Do you want to use the default IP address and port? \n")
+        sys.stdout.write(">> Yes(Y)/No(N): ")
         sys.stdout.flush()
         answer = sys.stdin.readline()[:-1]
         # Assume user is kind
@@ -175,19 +169,19 @@ def main():
             f.write("0\n")
             local_net_setting_created = 1
         while True:
-            sys.stdout.write("Enter the IP address you want to connect to: \n")
-            sys.stdout.write("IP address: ")
+            sys.stdout.write(">> Enter the IP address you want to connect to: \n")
+            sys.stdout.write(">> IP address: ")
             sys.stdout.flush()
             ip_temp = sys.stdin.readline()[:-1]
-            sys.stdout.write("Enter the port you want to connect to: \n")
-            sys.stdout.write("Port: ")
+            sys.stdout.write(">> Enter the port you want to connect to: \n")
+            sys.stdout.write(">> Port: ")
             sys.stdout.flush()
             port_temp = int(sys.stdin.readline()[:-1])
             try:
                 server.connect((ip_temp, port_temp))
             except:
                 print(ip_temp, port_temp)
-                sys.stdout.write("Exception: Please enter the valid IP address and port! \n")
+                sys.stdout.write(">> [Exception: Please enter the valid IP address and port!] \n")
                 continue
             f.write(ip_temp+"\n")
             f.write(str(port_temp)+"\n")
@@ -207,7 +201,7 @@ def main():
     #IP_address = str(sys.argv[1])
     #Port = int(sys.argv[2])
 
-    print "Welcome to GST603 Chatroom!"
+    print ">> Welcome to GST603 Chatroom!"
     login()
     while True:
         sockets_list = [sys.stdin, server]
@@ -223,7 +217,7 @@ def main():
                     sys.exit()
 
                 elif message == ":uf\n":  # upload file
-                    print "Type in the file name you want to upload: (please include the entire directory)"
+                    print ">> Type in the file name you want to upload: (please include the entire directory)"
                     sys.stdout.flush()
                     file_dir = sys.stdin.readline()[:-1]
                     fileName = file_dir.split("/")
@@ -237,14 +231,14 @@ def main():
                         sendFile(f)
                         f.close()
                     except:
-                        print "\nNo such file."
+                        print ">> No such file."
                         f.close()
 
                 elif message == ":df\n":  # download file from cloud
                     server.send(FILE_REQUEST)
                     message = server.recv(2048)
                     server.send(DONE)
-                    print "Please choose one file to donwload:\n" + message
+                    print ">> Please choose one file to donwload:\n" + message
                     sys.stdout.flush()
                     fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
                     server.send(fileName)
@@ -252,9 +246,11 @@ def main():
                     if message == DONE:
                         receiveFile(fileName)
                     else:
-                        print "File reception failed :(" + message
+                        print ">> File reception failed :(" + message
                 elif message == ":h\n":  # user want help
-                    print '''":S":    register (can only be used when login)\n":uf":   upload file to the server\n":df":   download file from the server\n
+                    print '''>> ":S":    register (can only be used when login)\n /
+                            >> ":uf":   upload file to the server\n /
+                            >> ":df":   download file from the server\n
                           '''
                 else:
                     server.send(message[:-1])
