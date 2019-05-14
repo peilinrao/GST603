@@ -132,7 +132,6 @@ def main():
         sys.stdout.flush()
         answer = sys.stdin.readline()[:-1]
         # Assume user is kind
-        print(answer)
         if answer == "Y":
             IP_address = str(lines[1 + index * 2][:-1])
             Port = int(lines[2 + index * 2])
