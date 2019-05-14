@@ -119,7 +119,7 @@ def readUsrData(input):
         temp = line.split()
         user_data_dict[temp[0]] = temp[1]
 
-    # print user_data_dict
+    print user_data_dict
 
     f.close()
 
