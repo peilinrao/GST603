@@ -3,12 +3,51 @@ import select
 from thread import *
 import sys
 
-list_of_clients=[]
+FILE_NO_EXIST = "\b\b"
+FILE_UPLOADING = "\0\0"
+FILE_REQUEST = "\n\n"
+
+list_of_clients = []
 user_name_dict = {}
 user_data_dict = {}
 
+def readFile(conn, addr, name):
+    f = open(name, "wb")
+    while True:
+        package = conn.recv(2048)
+
+        if not package: # done receiving the package
+            break
+
+        f.write(package)
+
+    f.close()
+
+    # update the directory
+    f = open("cloudFileDir.txt", "a+")
+    f.write(name + "\n")
+    f.close()
+    broadcast("\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n", conn) # tell all clients a cloud file has been uploaded
+
+def sendFile(conn, addr, name):
+    try:
+        f = open(name, "rb")
+        while True:
+            package = f.read(2048)
+
+            if not package:  # done reading
+                break
+
+            conn.send(package)
+
+        f.close()
+
+    except:
+        conn.send(FILE_NO_EXIST)
+
+
 def clientthread(conn, addr):
-    conn.send("Welcome to this GST603 Chatroom, " + user_name_dict[conn] + "!\n")
+    conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n")
     broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
     broadcast(broadcast_m, conn)
     conn.send("\0")
@@ -17,10 +56,34 @@ def clientthread(conn, addr):
             try:
                 message = conn.recv(2048)
                 if message:
-                    print "<" + user_name_dict[conn] + "> " + message
-                    message_to_send = "<" + user_name_dict[conn] + "> " + message
-                    broadcast(message_to_send,conn)
-                    #prints the message and address of the user who just sent the message on the server terminal
+                    if message == FILE_UPLOADING: # a file is being uploaded
+                        try:
+                            fileName = conn.recv(2048) # read the file name
+                            readFile(conn, addr, fileName)
+                        except:
+                            continue
+                    elif message == FILE_REQUEST: # the client wants the file
+                        # give user the cloud file directory
+                        print "Choose from cloud file blow:"
+                        try:
+                            f = open("cloudFileDir.txt", "r")
+                            try:
+                                message = conn.recv(1024)
+                                if message:
+                                    sendFile(conn, addr, name)
+                                else:
+                                    remove(conn)
+                            except:
+                                continue
+                        except:
+                            f.close()
+                            conn.send(FILE_NO_EXIST)  # no cloud file available
+                    else:
+                        print "<" + user_name_dict[conn] + "> " + message
+                        message_to_send = "<" + user_name_dict[conn] + "> " + message
+                        broadcast(message_to_send,conn)
+                        #prints the message and address of the user who just sent the message on the server terminal
+
                 else:
                     remove(conn)
             except:
