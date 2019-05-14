@@ -3,17 +3,29 @@ import select
 from thread import *
 import sys
 
+# constants
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
 EOF = "\0\0\0"
 DONE = "\n\n\n"
 
+# globals
 list_of_clients = []
 cloud_files = []
 user_name_dict = {}
 user_data_dict = {}
 
+'''
+receiveFile(conn, addr, name):
+DESCRIPTION: receive a file from client
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+             name: name of the uploaded file
+OUTPUT:      none
+SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
+             done. Notice other users about arrival of a file.
+'''
 def receiveFile(conn, addr, name):
     f = open(name, "wb")
     package = conn.recv(2048)
@@ -36,6 +48,15 @@ def receiveFile(conn, addr, name):
     broadcast("\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n", conn) # tell all clients a cloud file has been uploaded
     conn.send("\nFile uploaded")
 
+'''
+sendFile(conn, addr, name):
+DESCRIPTION: send a file from client (* not completed)
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+             name: name of the outgoing file
+OUTPUT:      none
+SIDEEFFECTS: send the target file to the client
+'''
 def sendFile(conn, addr, name):
     try:
         f = open(name, "rb")
@@ -52,7 +73,15 @@ def sendFile(conn, addr, name):
     except:
         conn.send(FILE_NO_EXIST)
 
-
+'''
+clientthread(conn, addr):
+DESCRIPTION: a thread for client on the server
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+OUTPUT:      none
+SIDEEFFECTS: check for client activities on the server, including messages,
+             file sending request and file downloading request
+'''
 def clientthread(conn, addr):
     conn.send("Welcome to GST603 Chatroom, " + user_name_dict[conn] + "!\n:q to quit the chatroom, :uf to upload cloud files:)")
     broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
@@ -96,6 +125,14 @@ def clientthread(conn, addr):
             except:
                 continue
 
+'''
+broadcast(message,connection):
+DESCRIPTION: broadcast a message
+INPUT:       message: the message need broadcasting
+             connection: socket of the sender
+OUTPUT:      none
+SIDEEFFECTS: send message to all other clients except the sender
+'''
 def broadcast(message,connection):
     for clients in list_of_clients:
         if clients!=connection:
@@ -105,6 +142,13 @@ def broadcast(message,connection):
                 clients.close()
                 remove(clients)
 
+'''
+remove(connection):
+DESCRIPTION: remove a user from online list
+INPUT:       connection: socket of the client
+OUTPUT:      none
+SIDEEFFECTS: remove a user from online list
+'''
 def remove(connection):
     if connection in list_of_clients:
         broadcast_m = "\nUser " + user_name_dict[connection] + " exited the chatroom.\n"
@@ -113,7 +157,13 @@ def remove(connection):
         list_of_clients.remove(connection)
         user_name_dict.remove(connection)
 
-
+'''
+readUsrData(input):
+DESCRIPTION: read user_data
+INPUT:       input: name of the file
+OUTPUT:      none
+SIDEEFFECTS: read user credentials from a txt file into user_data_dict
+'''
 def readUsrData(input):
     try:
         f = open(input, "r")
@@ -130,6 +180,14 @@ def readUsrData(input):
 
     f.close()
 
+'''
+txtToList(input, list):
+DESCRIPTION: convert txt file into a list
+INPUT:       input: name of the file
+             list: name of the output list
+OUTPUT:      none
+SIDEEFFECTS: convert txt file into a list line by line (list include no "\n")
+'''
 def txtToList(input, list):
     try:
         f = open(input, "r")
@@ -143,6 +201,15 @@ def txtToList(input, list):
 
     f.close()
 
+'''
+createNewUsr(input, name, password):
+DESCRIPTION: create a new user
+INPUT:       input: name of the save file
+             name: user name
+             password: user password
+OUTPUT:      none
+SIDEEFFECTS: create a new user in server data base, called by registerpolling
+'''
 def createNewUsr(input, name, password):
     try:
         f = open(input, "a+")
@@ -155,6 +222,14 @@ def createNewUsr(input, name, password):
 
     f.close()
 
+'''
+registerpolling(conn,addr):
+DESCRIPTION: deal with user registration
+INPUT:       conn: socket of the new user
+             addr: IP addr of the new user
+OUTPUT:      none
+SIDEEFFECTS: deal with user registration, created as a thread
+'''
 def registerpolling(conn,addr):
     # print "Creating new user...\n"
     while True:
@@ -174,6 +249,14 @@ def registerpolling(conn,addr):
             except:
                 continue
 
+'''
+signinpolling(conn, addr):
+DESCRIPTION: deal with user sign in
+INPUT:       conn: socket of the user
+             addr: IP addr of the user
+OUTPUT:      none
+SIDEEFFECTS: deal with user sign in, created as a thread
+'''
 def signinpolling(conn, addr):
     while True:
             try:
@@ -205,6 +288,15 @@ def signinpolling(conn, addr):
                     remove(conn)
             except:
                 continue
+
+
+'''
+main():
+DESCRIPTION: main body of server code
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: main func
+'''
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 """

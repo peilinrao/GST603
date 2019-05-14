@@ -29,6 +29,14 @@ def readNetSettings(input):
 
     f.close()
 
+'''
+login():
+DESCRIPTION: for user login purpose, check for validity of user credentials
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: instructions for users to login correctly are printed on terminal
+             allow new user registration
+'''
 def login():
     while True:
         sys.stdout.write("Please login. To register, type in :S at user name.\n")
@@ -57,6 +65,14 @@ def login():
             print message
             return
 
+'''
+create():
+DESCRIPTION: create a new user
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: instructions for users to register correctly are printed on
+             terminal. enter the chatroom once registration is done
+'''
 def create():
     sys.stdout.write("User name:")
     sys.stdout.flush()
@@ -72,6 +88,13 @@ def create():
     sys.stdout.write("\n")
     server.send(usrName[:-1] + " " + password)
 
+'''
+create():
+DESCRIPTION: upload file to server
+INPUT:       file handler
+OUTPUT:      none
+SIDEEFFECTS: upload the file to server
+'''
 def sendFile(f):
     try:
         package = f.read(1024)
@@ -85,7 +108,14 @@ def sendFile(f):
         print "errrrr"
         return
 
-
+'''
+main():
+DESCRIPTION: main body of chatroom client codes
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: Start the program. Set up internet connection. Let user login,
+             handle incoming messages and send message to server.
+'''
 def main():
     local_net_setting_created = 0
 
