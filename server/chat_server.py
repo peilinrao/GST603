@@ -10,6 +10,7 @@ FILE_REQUEST = "\n\n"
 EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
+NO_EXIST = "\b\0"
 
 # globals
 list_of_clients = []
@@ -45,8 +46,10 @@ def receiveFile(conn, addr, name):
         f.write(name + "\n")
         f.close()
         cloud_files.append(name)
-    print "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
-    broadcast("\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n", conn) # tell all clients a cloud file has been uploaded
+    message = "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
+    print message
+
+    broadcast(message, conn) # tell all clients a cloud file has been uploaded
     conn.send(DONE)
 
 '''
@@ -149,6 +152,8 @@ def broadcast(message,connection):
                 clients.send(message)
             except:
                 clients.close()
+                print "Exception: cannot broadcast"
+
                 remove(clients)
 
 '''
@@ -286,7 +291,7 @@ def signinpolling(conn, addr):
                                 print "Password not correct for " + temp[0] + "\n"
                                 continue
                         else:
-                            conn.send("\n")
+                            conn.send("\b\0")
                             list_of_clients.remove(conn)
                             print "No existing user.\n"
                             continue

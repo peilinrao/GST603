@@ -11,6 +11,7 @@ FILE_REQUEST = "\n\n"
 EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
+NO_EXIST = "\b\0"
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,7 +60,7 @@ def login():
         if message == "\b":
             print "Password incorrect."
             continue
-        elif message == "\n":
+        elif message == NO_EXIST":
             print "User doesnot exist."
             continue
         else:
@@ -214,8 +215,6 @@ def main():
         for socks in read_sockets:
             if socks == server:
                 message = socks.recv(2048)
-                if message[0] == "\n":
-                    continue
                 print message
             else:
                 message = sys.stdin.readline()
