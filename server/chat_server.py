@@ -11,6 +11,7 @@ EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
+FILEMODE = False
 
 # globals
 list_of_clients = []
@@ -92,46 +93,52 @@ def clientthread(conn, addr):
             try:
                 message = conn.recv(2048)
                 if message:
-                    if message == FILE_UPLOADING: # a file is being uploaded
-                        try:
-                            fileName = conn.recv(2048) # read the file name
-                            receiveFile(conn, addr, fileName)
-                        except:
-                            continue
-                    elif message == FILE_REQUEST: # the client wants the file
-                        # give user the cloud file directory
-                        print ">> User requesting file..."
-                        try:
-                            message = ""
-                            for elements in cloud_files:
-                                message += elements + "\n"
+                    if FILEMODE:
+                        if message == FILE_UPLOADING: # a file is being uploaded
                             try:
-                                conn.send(message)
-                                message = conn.recv(3)    # wait for response
-                                message = conn.recv(1024)
-                                if message:
-                                    try:
-                                        f = open(message, "rb")
-                                        conn.send(DONE)
-                                        sendFile(f, conn)
-                                        f.close()
-                                    except:
-                                        conn.send(FAIL)
-                                        f.close()
-                                else:
-                                    remove(conn)
+                                fileName = conn.recv(2048) # read the file name
+                                receiveFile(conn, addr, fileName)
                             except:
                                 continue
-                        except:
-                            conn.send(FILE_NO_EXIST)  # no cloud file available
+                        elif message == FILE_REQUEST: # the client wants the file
+                            # give user the cloud file directory
+                            print ">> User requesting file..."
+                            try:
+                                message = ""
+                                for elements in cloud_files:
+                                    message += elements + "\n"
+                                try:
+                                    conn.send(message)
+                                    message = conn.recv(3)    # wait for response
+                                    message = conn.recv(1024)
+                                    if message:
+                                        try:
+                                            f = open(message, "rb")
+                                            conn.send(DONE)
+                                            sendFile(f, conn)
+                                            f.close()
+                                        except:
+                                            conn.send(FAIL)
+                                            f.close()
+                                    else:
+                                        remove(conn)
+                                except:
+                                    continue
+                            except:
+                                conn.send(FILE_NO_EXIST)  # no cloud file available
+                        else:
+                            if message[0] == "\n" and message[1] == "\n":
+                                continue
+                            message_to_send = "<" + user_name_dict[conn] + "> " + message
+                            print message_to_send
+                            broadcast(message_to_send,conn)
+                            #prints the message and address of the user who just sent the message on the server terminal
                     else:
                         if message[0] == "\n" and message[1] == "\n":
                             continue
                         message_to_send = "<" + user_name_dict[conn] + "> " + message
                         print message_to_send
                         broadcast(message_to_send,conn)
-                        #prints the message and address of the user who just sent the message on the server terminal
-
                 else:
                     remove(conn)
             except:

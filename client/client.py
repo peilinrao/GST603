@@ -12,6 +12,7 @@ EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
+FILEMODE = False
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -177,7 +178,7 @@ def main():
             try:
                 server.connect((ip_temp, port_temp))
             except:
-                print(ip_temp, port_temp)
+                # print(ip_temp, port_temp)
                 sys.stdout.write(">> [Exception: Please enter the valid IP address and port!] \n")
                 continue
             f.write(ip_temp+"\n")
@@ -191,7 +192,7 @@ def main():
         with open("local_net_setting.txt") as f:
             lines = f.readlines()
         lines[0] = str(len(lines)/2 - 1)+"\n"
-        print lines
+        # print lines
         with open("local_net_setting.txt", "w") as f:
             f.writelines(lines)
 
@@ -211,49 +212,63 @@ def main():
                 print message
             else:
                 message = sys.stdin.readline()
-                if message == ":q\n":  # quit the chatroom
-                    server.close()
-                    sys.exit()
 
-                elif message == ":uf\n":  # upload file
-                    print ">> Type in the file name you want to upload: (please include the entire directory)"
-                    sys.stdout.flush()
-                    file_dir = sys.stdin.readline()[:-1]
-                    fileName = file_dir.split("/")
-                    # print file_dir
-                    try:
-                        f = open(file_dir, "rb")
-                        server.send(FILE_UPLOADING)
-                        sleep(0.01)
-                        server.send(fileName[-1])
-                        sleep(0.01)
-                        sendFile(f)
-                        f.close()
-                    except:
-                        print ">> No such file."
-                        f.close()
+                if FILEMODE:
+                    if message == ":q\n":  # quit the chatroom
+                        server.close()
+                        sys.exit()
+                    elif message == ":uf\n":  # upload file
+                        print ">> Type in the file name you want to upload: (please include the entire directory)"
+                        sys.stdout.flush()
+                        file_dir = sys.stdin.readline()[:-1]
+                        fileName = file_dir.split("/")
+                        # print file_dir
+                        try:
+                            f = open(file_dir, "rb")
+                            server.send(FILE_UPLOADING)
+                            sleep(0.01)
+                            server.send(fileName[-1])
+                            sleep(0.01)
+                            sendFile(f)
+                            f.close()
+                        except:
+                            print ">> No such file."
+                            f.close()
 
-                elif message == ":df\n":  # download file from cloud
-                    server.send(FILE_REQUEST)
-                    message = server.recv(2048)
-                    server.send(DONE)
-                    print ">> Please choose one file to donwload:\n" + message
-                    sys.stdout.flush()
-                    fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
-                    server.send(fileName)
-                    message = server.recv(3)
-                    if message == DONE:
-                        receiveFile(fileName)
+                    elif message == ":df\n":  # download file from cloud
+                        server.send(FILE_REQUEST)
+                        message = server.recv(2048)
+                        server.send(DONE)
+                        print ">> Please choose one file to donwload:\n" + message
+                        sys.stdout.flush()
+                        fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
+                        server.send(fileName)
+                        message = server.recv(3)
+                        if message == DONE:
+                            receiveFile(fileName)
+                        else:
+                            print ">> File reception failed :(" + message
+                    elif message == ":h\n":  # user want help
+                        print '''>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>>":q": quit the chatroom.\n'''
                     else:
-                        print ">> File reception failed :(" + message
-                elif message == ":h\n":  # user want help
-                    print '''>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n'''
+                        server.send(message[:-1])
+                        sys.stdout.write("\033[A")
+                        sys.stdout.write("<You> ")
+                        sys.stdout.write(message)
+                        sys.stdout.flush()
                 else:
-                    server.send(message[:-1])
-                    sys.stdout.write("\033[A")
-                    sys.stdout.write("<You> ")
-                    sys.stdout.write(message)
-                    sys.stdout.flush()
+                    if message == ":q\n":  # quit the chatroom
+                        server.close()
+                        sys.exit()
+                    elif message == ":h\n":  # user want help
+                        print '''>> ":S": register (can only be used when login)\n>>":q": quit the chatroom.\n'''
+                    else:
+                        server.send(message[:-1])
+                        sys.stdout.write("\033[A")
+                        sys.stdout.write("<You> ")
+                        sys.stdout.write(message)
+                        sys.stdout.flush()
+
 
     server.close()
 
