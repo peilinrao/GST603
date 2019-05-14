@@ -3,6 +3,21 @@ import select
 import sys
 import getpass
 
+def readNetSettings(input):
+    try:
+        f = open(input, "r")
+    except:
+        setupNetwork(input)
+        return
+
+    for line in f.readlines():
+        temp = line.split()
+        user_data_dict[temp[0]] = temp[1]
+
+    # print user_data_dict
+
+    f.close()
+
 def login():
     while True:
         sys.stdout.write("Please login. To register, type in :S at user name.\n")
