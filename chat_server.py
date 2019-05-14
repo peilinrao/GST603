@@ -7,6 +7,43 @@ list_of_clients=[]
 user_name_dict = {}
 user_data_dict = {}
 
+def clientthread(conn, addr):
+    conn.send("Welcome to this GST603 Chatroom, " + user_name_dict[conn] + "!\n")
+    broadcast_m = "\n" + user_name_dict[conn] + " has entered chatroom.\n"
+    broadcast(broadcast_m, conn)
+    conn.send("\0")
+    #sends a message to the client whose user object is conn
+    while True:
+            try:
+                message = conn.recv(2048)
+                if message:
+                    print "<" + user_name_dict[conn] + "> " + message
+                    message_to_send = "<" + user_name_dict[conn] + "> " + message
+                    broadcast(message_to_send,conn)
+                    #prints the message and address of the user who just sent the message on the server terminal
+                else:
+                    remove(conn)
+            except:
+                continue
+
+def broadcast(message,connection):
+    for clients in list_of_clients:
+        if clients!=connection:
+            try:
+                clients.send(message)
+            except:
+                clients.close()
+                remove(clients)
+
+def remove(connection):
+    if connection in list_of_clients:
+        broadcast_m = "\nUser " + user_name_dict[connection] + " exited the chatroom.\n"
+        print broadcast_m
+        broadcast(broadcast_m,connection)
+        list_of_clients.remove(connection)
+        user_name_dict.remove(connection)
+
+
 def readUsrData(input):
     try:
         f = open(input, "r")
@@ -103,44 +140,7 @@ server.bind((IP_address, Port))
 server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
-
-def clientthread(conn, addr):
-    conn.send("Welcome to this chatroom!\n")
-    broadcast_m = "\n" + user_name_dict[conn] + " has entered chat room.\n"
-    broadcast(broadcast_m, conn)
-    conn.send("\0")
-    #sends a message to the client whose user object is conn
-    while True:
-            try:
-                message = conn.recv(2048)
-                if message:
-                    print "<" + user_name_dict[conn] + "> " + message
-                    message_to_send = "<" + user_name_dict[conn] + "> " + message
-                    broadcast(message_to_send,conn)
-                    #prints the message and address of the user who just sent the message on the server terminal
-                else:
-                    remove(conn)
-            except:
-                continue
-
-def broadcast(message,connection):
-    for clients in list_of_clients:
-        if clients!=connection:
-            try:
-                clients.send(message)
-            except:
-                clients.close()
-                remove(clients)
-
-def remove(connection):
-    if connection in list_of_clients:
-        broadcast_m = "\nUser " + user_name_dict[connection] + " exited the chat room.\n"
-        print broadcast_m
-        broadcast(broadcast_m,connection)
-        list_of_clients.remove(connection)
-        user_name_dict.remove(connection)
-
-
+print "GST603 server booted!"
 
 while True:
     conn, addr = server.accept()
