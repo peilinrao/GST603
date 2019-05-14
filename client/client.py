@@ -72,15 +72,14 @@ SIDEEFFECTS: instructions for users to register correctly are printed on
              terminal. enter the chatroom once registration is done
 '''
 def create():
-    sys.stdout.write("User name:")
+    sys.stdout.write(">> Username: ")
     sys.stdout.flush()
     usrName = sys.stdin.readline()
     while usrName == ":S\n":
-        print ">> This is an invalid user name!"
+        print ">> This is an invalid username!"
         sys.stdout.write(">> Username: ")
         sys.stdout.flush()
         usrName = sys.stdin.readline()
-    sys.stdout.write(">> ")
     password = getpass.getpass(prompt='>> Password: ')
     sys.stdout.write("\n")
     server.send(usrName[:-1] + " " + password)
@@ -248,10 +247,7 @@ def main():
                     else:
                         print ">> File reception failed :(" + message
                 elif message == ":h\n":  # user want help
-                    print '''>> ":S":    register (can only be used when login)\n /
-                            >> ":uf":   upload file to the server\n /
-                            >> ":df":   download file from the server\n
-                          '''
+                    print '''>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n'''
                 else:
                     server.send(message[:-1])
                     sys.stdout.write("\033[A")
