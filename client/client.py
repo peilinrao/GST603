@@ -254,9 +254,9 @@ def main():
                         try:
                             f = open(file_dir, "rb")
                             server.send(FILE_UPLOADING)
-                            sleep(0.01)
+                            server.recv(SIG_LENGTH)
                             server.send(fileName[-1])
-                            sleep(0.01)
+                            server.recv(SIG_LENGTH)
                             sendFile(f)
                             f.close()
                         except:

@@ -1,3 +1,4 @@
 mp1.S Jiyu
 pr2.png Jiyu
 MCM.zip Jiyu
+group-eval.pdf Jiyu

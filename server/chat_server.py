@@ -133,8 +133,10 @@ def clientthread(conn, addr):
                 if message:
                     if FILEMODE:
                         if message == FILE_UPLOADING: # a file is being uploaded
+                            conn.send(DONE)
                             try:
                                 fileName = conn.recv(MSG_BUF_SIZE) # read the file name
+                                conn.send(DONE)
                                 receiveFile(conn, addr, fileName)
                             except:
                                 continue
