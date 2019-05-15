@@ -13,11 +13,14 @@ FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
 NEW_USR = "\0\b"
 PASS_ERR = "\b"
-FILEMODE = False
+MSG_BUF_SIZE = 2048
+PKG_SIZE = 4*2048
+SIG_LENGTH = 3
+FILEMODE = True
 
 # globals
 list_of_clients = []
-cloud_files = []
+cloud_files = {}
 user_name_dict = {}
 user_data_dict = {}
 
@@ -33,12 +36,12 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(conn, addr, name):
     f = open(name, "wb")
-    package = conn.recv(2048)
+    package = conn.recv(PKG_SIZE + 10)
     conn.send(DONE)
     while package[0] == "\b":
         f.write(package[1:])
         # print package
-        package = conn.recv(2048)
+        package = conn.recv(PKG_SIZE + 10)
         conn.send(DONE)
 
     f.close()
@@ -46,9 +49,9 @@ def receiveFile(conn, addr, name):
     # update the directory
     if name not in cloud_files:
         f = open("cloudFileDir.txt", "a+")
-        f.write(name + "\n")
+        f.write(name + " " + user_name_dict[conn] + "\n")
         f.close()
-        cloud_files.append(name)
+        cloud_files[name] = user_name_dict[conn]
     message = "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
     print message
 
@@ -64,17 +67,33 @@ SIDEEFFECTS: upload the file to server
 '''
 def sendFile(f, conn):
     try:
-        package = f.read(1024)
+        package = f.read(PKG_SIZE)
         while package:
             conn.send("\b"+package)
-            package = f.read(1024)
-            conn.recv(10)
+            package = f.read(PKG_SIZE)
+            conn.recv(SIG_LENGTH)
 
         conn.send(EOF)
         print ">> File downloaded by " + user_name_dict[conn]+ "."
     except:
         print ">> [Error: file cannot be uploaded.]"
         return
+
+'''
+removeFile(conn):
+DESCRIPTION: remove a file from the server
+INPUT:       client socket
+OUTPUT:      none
+SIDEEFFECTS: remove a file from the server
+'''
+def removeFile(conn):
+    message = ""
+    for line in f.readlines()[:-1]:
+        temp = line.split()
+        if temp[1] == user_name_dict[conn]:
+            message += temp[0]
+
+
 
 '''
 clientthread(conn, addr):
@@ -93,12 +112,12 @@ def clientthread(conn, addr):
     #sends a message to the client whose user object is conn
     while True:
             try:
-                message = conn.recv(2048)
+                message = conn.recv(MSG_BUF_SIZE)
                 if message:
                     if FILEMODE:
                         if message == FILE_UPLOADING: # a file is being uploaded
                             try:
-                                fileName = conn.recv(2048) # read the file name
+                                fileName = conn.recv(MSG_BUF_SIZE) # read the file name
                                 receiveFile(conn, addr, fileName)
                             except:
                                 continue
@@ -111,8 +130,8 @@ def clientthread(conn, addr):
                                     message += elements + "\n"
                                 try:
                                     conn.send(message)
-                                    message = conn.recv(3)    # wait for response
-                                    message = conn.recv(1024)
+                                    message = conn.recv(SIG_LENGTH)    # wait for response
+                                    message = conn.recv(MSG_BUF_SIZE)
                                     if message:
                                         try:
                                             f = open(message, "rb")
@@ -128,6 +147,16 @@ def clientthread(conn, addr):
                                     continue
                             except:
                                 conn.send(FILE_NO_EXIST)  # no cloud file available
+                        elif message == FILE_REMOVE:
+                            message = FAIL
+                            for elements in cloud_files.values():
+                                if elements == user_name_dict[conn]:
+                                    message = DONE
+                                    break
+                            conn.send(message)
+                            conn.recv(SIG_LENGTH)
+                            if message == DONE:
+                                removeFile(conn)
                         else:
                             if message[0] == "\n" and message[1] == "\n":
                                 continue
@@ -204,6 +233,30 @@ def readUsrData(input):
     f.close()
 
 '''
+txtToDict(input, list):
+DESCRIPTION: convert txt file into a dictionary
+INPUT:       input: name of the file
+             list: name of the output dictionary
+OUTPUT:      none
+SIDEEFFECTS: convert txt file into a list line by line (list include no "\n")
+             key and value in the same line, seperated by " "
+'''
+def txtToDict(input, dict):
+    try:
+        f = open(input, "r")
+    except:
+        return
+
+    dict = {}
+    for line in f.readlines()[:-1]:
+        temp = line.split()
+        dict[temp[0]] = temp[1]
+
+    # print user_data_dict
+
+    f.close()
+
+'''
 txtToList(input, list):
 DESCRIPTION: convert txt file into a list
 INPUT:       input: name of the file
@@ -217,6 +270,7 @@ def txtToList(input, list):
     except:
         return
 
+    list = []
     for line in f.readlines():
         list.append(line[:-1])
 
@@ -257,7 +311,7 @@ def registerpolling(conn,addr):
     # print "Creating new user...\n"
     while True:
             try:
-                message = conn.recv(2048)
+                message = conn.recv(MSG_BUF_SIZE)
                 if message:
                     temp = message.split()
                     createNewUsr("user_data.txt", temp[0], temp[1])
@@ -283,7 +337,7 @@ SIDEEFFECTS: deal with user sign in, created as a thread
 def signinpolling(conn, addr):
     while True:
             try:
-                message = conn.recv(2048)
+                message = conn.recv(MSG_BUF_SIZE)
                 if message:
                     if message != NEW_USR:
                         temp = message.split()
@@ -338,7 +392,7 @@ server.bind((IP_address, Port))
 server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
-txtToList("cloudFileDir.txt", cloud_files)
+txtToDict("cloudFileDir.txt", cloud_files)
 print ">> GST603 server booted!"
 
 while True:

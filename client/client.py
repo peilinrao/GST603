@@ -5,6 +5,7 @@ import getpass
 import time
 from time import sleep
 
+# constants
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
@@ -14,7 +15,11 @@ FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
 NEW_USR = "\0\b"
 PASS_ERR = "\b"
-FILEMODE = False
+FILE_REMOVE = "\b\0\b"
+MSG_BUF_SIZE = 2048
+PKG_SIZE = 4*2048
+SIG_LENGTH = 3
+FILEMODE = True
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -87,28 +92,49 @@ def create():
 
 '''
 receiveFile(name):
-DESCRIPTION: receive a file from client
-INPUT:       conn: socket of the client
-             addr: IP address of the client
-             name: name of the uploaded file
+DESCRIPTION: receive a file from server
+INPUT:       name: name of the uploaded file
 OUTPUT:      none
 SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(name):
     f = open(name, "wb")
-    package = server.recv(2048)
+    package = server.recv(PKG_SIZE + 10)
     server.send(DONE)
     while package[0] == "\b":
         f.write(package[1:])
         # print package
-        package = server.recv(2048)
+        package = server.recv(PKG_SIZE + 10)
         server.send(DONE)
 
     f.close()
     print name + " has been successfully downloaded"
 
     # server.send(DONE)
+
+'''
+receiveFile():
+DESCRIPTION: remove a file from the server
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: remove a file from the server
+'''
+def removeFile():
+    message = server.recv(MSG_BUF_SIZE)
+    if message == FAIL:
+        return
+    else:
+        print ">> Choose one from the following files to remove from cloud:"
+        print message
+        sys.stdout.flush()
+        message = sys.stdin.readline()[:-1]
+        server.send(message)
+        message = server.recv(SIG_LENGTH)
+        if message == FAIL:
+            print ">> File failed to remove."
+        else:
+            print ">> File successfully removed."
 
 '''
 sendFile(f):
@@ -119,14 +145,14 @@ SIDEEFFECTS: upload the file to server
 '''
 def sendFile(f):
     try:
-        package = f.read(1024)
+        package = f.read(PKG_SIZE)
         while package:
             server.send("\b"+package)
-            package = f.read(1024)
-            server.recv(10)
+            package = f.read(PKG_SIZE)
+            server.recv(SIG_LENGTH)
 
         server.send(EOF)
-        server.recv(10)
+        server.recv(SIG_LENGTH)
         print ">> File uploaded."
     except:
         print ">> [ERROR: Cannot upload file.] "
@@ -208,8 +234,8 @@ def main():
         read_sockets,write_socket, error_socket = select.select(sockets_list, [], [])
         for socks in read_sockets:
             if socks == server:
-                message = socks.recv(2048)
-                if message == "\n" or message == "\b" or message == "\0":
+                message = socks.recv(MSG_BUF_SIZE)
+                if message[0] == "\n" or message[0] == "\b" or message[0] == "\0":
                     continue
                 print message
             else:
@@ -239,17 +265,25 @@ def main():
 
                     elif message == ":df\n":  # download file from cloud
                         server.send(FILE_REQUEST)
-                        message = server.recv(2048)
+                        message = server.recv(MSG_BUF_SIZE)
                         server.send(DONE)
                         print ">> Please choose one file to donwload:\n" + message
                         sys.stdout.flush()
                         fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
                         server.send(fileName)
-                        message = server.recv(3)
+                        message = server.recv(SIG_LENGTH)
                         if message == DONE:
                             receiveFile(fileName)
                         else:
                             print ">> File reception failed :(" + message
+                    elif message == ":rf\n":  # user want to remove a self uploaded file from server
+                        server.send(FILE_REMOVE)
+                        message = server.recv(SIG_LENGTH)
+                        server.send(DONE)
+                        if message == FAIL:
+                            print ">> There are no files uploaded by you on cloud."
+                        else:
+                            removeFile()
                     elif message == ":h\n":  # user want help
                         print '''>> [help]\n>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>> ":q": quit the chatroom.\n'''
                     else:
