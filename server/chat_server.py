@@ -2,6 +2,7 @@ import socket
 import select
 from thread import *
 import sys
+import os
 
 # constants
 FILE_NO_EXIST = "\b\b"
@@ -13,6 +14,7 @@ FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
 NEW_USR = "\0\b"
 PASS_ERR = "\b"
+FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 3
@@ -88,12 +90,27 @@ SIDEEFFECTS: remove a file from the server
 '''
 def removeFile(conn):
     message = ""
-    for line in f.readlines()[:-1]:
-        temp = line.split()
-        if temp[1] == user_name_dict[conn]:
-            message += temp[0]
+    for fileName in cloud_files:
+        if cloud_files[fileName] == user_name_dict[conn]:
+            message += fileName + "\n"
 
+    conn.send(message)
+    message = conn.recv(MSG_BUF_SIZE)
+    try:
+        os.remove(message)
+        f = open("cloudFileDir.txt", "w")
+    except:
+        conn.send(FAIL)
+        return
 
+    for fileName in cloud_files:
+        if fileName != message:
+            temp = fileName + " " + cloud_files[fileName] + "\n"
+            f.write(temp)
+
+    cloud_files.pop(message)
+    conn.send(DONE)
+    print ">> " + message + " has been removed."
 
 '''
 clientthread(conn, addr):
@@ -130,7 +147,7 @@ def clientthread(conn, addr):
                                     message += elements + "\n"
                                 try:
                                     conn.send(message)
-                                    message = conn.recv(SIG_LENGTH)    # wait for response
+                                    # message = conn.recv(SIG_LENGTH)    # wait for response
                                     message = conn.recv(MSG_BUF_SIZE)
                                     if message:
                                         try:
@@ -158,15 +175,21 @@ def clientthread(conn, addr):
                             if message == DONE:
                                 removeFile(conn)
                         else:
-                            if message[0] == "\n" and message[1] == "\n":
-                                continue
+                            if message[0] == "\n":
+                                if len(message) == 1:
+                                    continue
+                                if message[1] == "\n":
+                                    continue
                             message_to_send = "<" + user_name_dict[conn] + "> " + message
                             print message_to_send
                             broadcast(message_to_send,conn)
                             #prints the message and address of the user who just sent the message on the server terminal
                     else:
-                        if message[0] == "\n" and message[1] == "\n":
-                            continue
+                        if message[0] == "\n":
+                            if len(message) == 1:
+                                continue
+                            if message[1] == "\n":
+                                continue
                         message_to_send = "<" + user_name_dict[conn] + "> " + message
                         print message_to_send
                         broadcast(message_to_send,conn)
@@ -247,8 +270,7 @@ def txtToDict(input, dict):
     except:
         return
 
-    dict = {}
-    for line in f.readlines()[:-1]:
+    for line in f.readlines():
         temp = line.split()
         dict[temp[0]] = temp[1]
 

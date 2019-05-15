@@ -266,7 +266,7 @@ def main():
                     elif message == ":df\n":  # download file from cloud
                         server.send(FILE_REQUEST)
                         message = server.recv(MSG_BUF_SIZE)
-                        server.send(DONE)
+                        # server.send(DONE)
                         print ">> Please choose one file to donwload:\n" + message
                         sys.stdout.flush()
                         fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
@@ -285,7 +285,7 @@ def main():
                         else:
                             removeFile()
                     elif message == ":h\n":  # user want help
-                        print '''>> [help]\n>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>> ":q": quit the chatroom.\n'''
+                        print '''>> [help]\n>> ":S": register (can only be used when login)\n>> ":uf": upload file to the server\n>> ":df": download file from the server\n>> ":rf": remove a file uploaded by you\n>> ":q": quit the chatroom.\n'''
                     else:
                         server.send(message[:-1])
                         sys.stdout.write("\033[A")
