@@ -11,6 +11,8 @@ EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
+NEW_USR = "\0\b"
+PASS_ERR = "\b"
 FILEMODE = False
 
 # globals
@@ -283,7 +285,7 @@ def signinpolling(conn, addr):
             try:
                 message = conn.recv(2048)
                 if message:
-                    if message != "\b":
+                    if message != NEW_USR:
                         temp = message.split()
                         if temp[0] in user_data_dict:
                             if temp[1] == user_data_dict[temp[0]]:
@@ -294,12 +296,12 @@ def signinpolling(conn, addr):
                                 #prints the message and address of the user who just sent the message on the server terminal
                                 return
                             else:
-                                conn.send("\b")
+                                conn.send(PASS_ERR)
                                 print ">> Password not correct for " + temp[0] + "."
                                 continue
                         else:
-                            conn.send("\b\0")
-                            list_of_clients.remove(conn)
+                            conn.send(NO_EXIST)
+                            # list_of_clients.remove(conn)
                             print ">> No existing user.\n"
                             continue
                     else:
@@ -353,7 +355,7 @@ while True:
     #Prints the address of the person who just connected
     message = conn.recv(200)
     if message:
-        if message != "\b":
+        if message != NEW_USR:
             temp = message.split()
             if temp[0] in user_data_dict:
                 if temp[1] == user_data_dict[temp[0]]:
@@ -364,11 +366,11 @@ while True:
 
                     #creates and individual thread for every user that connects
                 else:
-                    conn.send("\b")
+                    conn.send(PASS_ERR)
                     print ">> Password not correct for " + temp[0] + "."
                     start_new_thread(signinpolling,(conn,addr))
             else:
-                conn.send("\n")
+                conn.send(NO_EXIST)
                 print ">> No existing user."
                 start_new_thread(signinpolling,(conn,addr))
         else:

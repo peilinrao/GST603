@@ -12,6 +12,8 @@ EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
+NEW_USR = "\0\b"
+PASS_ERR = "\b"
 FILEMODE = False
 
 # Global
@@ -46,14 +48,14 @@ def login():
         sys.stdout.flush()
         usrName = sys.stdin.readline()
         if usrName == ":S\n":
-            server.send("\b")
+            server.send(NEW_USR)
             print ">> Creating new user... (Do not use :S as user name!!)"
             create()
             return
         password = getpass.getpass(prompt='>> Password: ')
         server.send(usrName[:-1] + " " + password)
         message = server.recv(200)
-        if message == "\b":
+        if message == PASS_ERR:
             print ">> Password incorrect."
             continue
         elif message == NO_EXIST:
