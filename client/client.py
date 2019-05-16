@@ -167,33 +167,27 @@ SIDEEFFECTS: Start the program. Set up internet connection. Let user login,
              handle incoming messages and send message to server.
 '''
 def main():
-    local_net_setting_created = 0
 
     try:
         with open("local_net_setting.txt") as f:
             lines = f.readlines()
-        local_net_setting_created = 1
-        index = int(lines[0])
-        if(len(lines) < 3):
-            raise IOError
+        if(len(lines)<2):
+            raise IOERROR
         sys.stdout.write(">> Do you want to use the default IP address and port? \n")
         sys.stdout.write(">> Yes(Y)/No(N): ")
         sys.stdout.flush()
         answer = sys.stdin.readline()[:-1]
         # Assume user is kind
         if answer == "Y":
-            IP_address = str(lines[1 + index * 2][:-1])
-            Port = int(lines[2 + index * 2])
+            IP_address = str(lines[0][:-1])
+            Port = int(lines[1])
+            print(">> Trying to connect.")
             server.connect((IP_address, Port))
+            print(">> Connected!")
         elif answer == "N":
             raise IOError
     except:
-        #with open("local_net_setting.txt", "w") as f:
-        #    f.writelines(lines)
-        f = open("local_net_setting.txt", "a+")
-        if local_net_setting_created == 0:
-            f.write("0\n")
-            local_net_setting_created = 1
+        f = open("local_net_setting.txt", "w")
         while True:
             sys.stdout.write(">> Enter the IP address you want to connect to: \n")
             sys.stdout.write(">> IP address: ")
@@ -204,29 +198,24 @@ def main():
             sys.stdout.flush()
             port_temp = int(sys.stdin.readline()[:-1])
             try:
+                print(">> Trying to connect.")
                 server.connect((ip_temp, port_temp))
+                print(">> Connected!")
             except:
                 # print(ip_temp, port_temp)
-                sys.stdout.write(">> [Exception: Please enter the valid IP address and port!] \n")
+                sys.stdout.write(">> [Exception: Connection failed!] \n")
                 continue
-            f.write(ip_temp+"\n")
-            f.write(str(port_temp)+"\n")
-            IP_address = ip_temp
-            Port = port_temp
+            print(">> Do you want to save yout IP and Port configuration?")
+            sys.stdout.write(">> Yes(Y)/No(N): ")
+            sys.stdout.flush()
+            answer = sys.stdin.readline()[:-1]
+            # Assume user is kind
+            if answer == "Y":
+                f.write(ip_temp+"\n")
+                f.write(str(port_temp)+"\n")
             break
         f.close()
-
-        #updating the index
-        with open("local_net_setting.txt") as f:
-            lines = f.readlines()
-        lines[0] = str(len(lines)/2 - 1)+"\n"
-        # print lines
-        with open("local_net_setting.txt", "w") as f:
-            f.writelines(lines)
-
-    #IP_address = str(sys.argv[1])
-    #Port = int(sys.argv[2])
-
+        
     print ">> Welcome to GST603 Chatroom!"
     login()
     while True:
