@@ -171,6 +171,7 @@ def sendFile(f):
         else:
             server.send(FAIL)
             print ">> You have aborted uploading process."
+            return
 
     try:
         package = f.read(PKG_SIZE)

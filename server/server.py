@@ -44,10 +44,10 @@ def receiveFile(conn, addr, name):
         else:
             conn.send(FILE_REMOVE)
 
-        message = conn.recv(SIG_LENGTH)
-        if message == FAIL:
-            print ">> User aborted uploading process."
-            return
+            message = conn.recv(SIG_LENGTH)
+            if message == FAIL:
+                print ">> User aborted uploading process."
+                return
     else:
         conn.send(DONE)
 
