@@ -18,7 +18,7 @@ PASS_ERR = "\b"
 FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
-SIG_LENGTH = 3
+SIG_LENGTH = 4
 FILEMODE = True
 
 # Global
@@ -100,12 +100,12 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(name):
     f = open(name, "wb")
-    package = server.recv(PKG_SIZE + 10)
+    package = server.recv(2*PKG_SIZE)
     server.send(DONE)
     while package != EOF:
         f.write(package[1:])
         # print package
-        package = server.recv(PKG_SIZE + 10)
+        package = server.recv(2*PKG_SIZE)
         server.send(DONE)
 
     f.close()
