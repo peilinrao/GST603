@@ -181,7 +181,6 @@ def clientthread(conn, addr):
                                             f.close()
                                         except:
                                             conn.send(FAIL)
-                                            f.close()
                                     else:
                                         remove(conn)
                                 except:
