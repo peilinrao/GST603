@@ -40,11 +40,14 @@ def receiveFile(conn, addr, name):
     f = open(name, "wb")
     package = conn.recv(2*PKG_SIZE)
     conn.send(DONE)
-    while package:
+    while True:
         f.write(package)
         # print package
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
+
+        if package == 000:
+            break
 
     f.close()
 
@@ -74,6 +77,9 @@ def sendFile(f, conn):
             conn.send(package)
             package = f.read(PKG_SIZE)
             conn.recv(SIG_LENGTH)
+
+        conn.send(EOF)
+        conn.recv(SIG_LENGTH)
 
         print ">> File downloaded by " + user_name_dict[conn]+ "."
     except:

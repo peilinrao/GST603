@@ -103,12 +103,15 @@ def receiveFile(name):
     package = server.recv(2*PKG_SIZE)
 
     server.send(DONE)
-    while package:
-        print("Hey")
+    while True:
+        # print("Hey")
         f.write(package)
         # print package
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
+
+        if package == 000:
+            break
     # for c in package:
     #    print ord(c)
 
@@ -155,8 +158,8 @@ def sendFile(f):
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
 
-        # server.send(EOF)
-        # server.recv(SIG_LENGTH)
+        server.send(EOF)
+        server.recv(SIG_LENGTH)
         print ">> File uploaded."
     except:
         print ">> [ERROR: Cannot upload file.] "
