@@ -18,7 +18,7 @@ PASS_ERR = "\b"
 FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
-SIG_LENGTH = 50
+SIG_LENGTH = 128
 FILEMODE = True
 
 # Global
@@ -110,7 +110,7 @@ def receiveFile(name):
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
 
-        if len(package) == 3:
+        if package == EOF:
             break
     # for c in package:
     #    print ord(c)
