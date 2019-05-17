@@ -37,7 +37,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(conn, addr, name):
-    print ">> " + user_name_dict[conn] + "uploading file..."
+    print ">> " + user_name_dict[conn] + " uploading file..."
     if name in cloud_files:
         if user_name_dict[conn] != cloud_files[name]:
             conn.send(FAIL)
