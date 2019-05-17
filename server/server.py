@@ -42,7 +42,7 @@ def receiveFile(conn, addr, name):
     conn.send(DONE)
     while True:
         f.write(package)
-        print sys.getsizeof("\0\b\0")
+        print len("\0\b\0")
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
