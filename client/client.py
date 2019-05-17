@@ -102,7 +102,7 @@ def receiveFile(name):
     f = open(name, "wb")
     package = server.recv(2*PKG_SIZE)
     server.send(DONE)
-    while package != EOF:
+    while package[0] == "\b":
         f.write(package[1:])
         # print package
         package = server.recv(2*PKG_SIZE)
