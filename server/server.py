@@ -66,6 +66,7 @@ def receiveFile(conn, addr, name):
             break
 
     f.close()
+    conn.send(EOF)
 
     # update the directory
     if name not in cloud_files:
@@ -77,7 +78,6 @@ def receiveFile(conn, addr, name):
     print message
 
     broadcast(message, conn) # tell all clients a cloud file has been uploaded
-    conn.send(DONE)
 
 '''
 sendFile(f, conn):
@@ -95,7 +95,8 @@ def sendFile(f, conn):
             conn.recv(SIG_LENGTH)
 
         conn.send(EOF)
-        conn.recv(SIG_LENGTH)
+        while server.recv(SIG_LENGTH) != EOF:
+            server.send(EOF)
 
         print ">> File downloaded by " + user_name_dict[conn]+ "."
     except:

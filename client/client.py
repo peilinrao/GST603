@@ -89,7 +89,7 @@ def create():
         usrName = sys.stdin.readline()
     password = getpass.getpass(prompt='>> Password: ')
     server.send(usrName[:-1] + " " + password)
-    
+
     while server.recv(SIG_LENGTH) == FAIL:
         print ">> This Username is already taken, please use another one."
         sys.stdout.write(">> Username: ")
@@ -129,6 +129,7 @@ def receiveFile(name):
     #    print ord(c)
 
     f.close()
+    server.send(EOF)
     print name + " has been successfully downloaded"
 
     # server.send(DONE)
@@ -194,7 +195,9 @@ def sendFile(f):
             server.recv(SIG_LENGTH)
 
         server.send(EOF)
-        server.recv(SIG_LENGTH)
+        while server.recv(SIG_LENGTH) != EOF:
+            server.send(EOF)
+
         print ">> File uploaded."
     except:
         print ">> [ERROR: Cannot upload file.] "
