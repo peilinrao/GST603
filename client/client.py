@@ -101,6 +101,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 def receiveFile(name):
     f = open(name, "wb")
     package = server.recv(2*PKG_SIZE)
+
     server.send(DONE)
     while package[0] == "\b":
         print("Hey")
@@ -108,7 +109,8 @@ def receiveFile(name):
         # print package
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
-    print(package)    
+    for c in package:
+        print ord(c)
 
     f.close()
     print name + " has been successfully downloaded"
