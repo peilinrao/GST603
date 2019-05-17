@@ -54,7 +54,7 @@ def login():
         usrName = sys.stdin.readline()
         if usrName == ":S\n":
             server.send(NEW_USR)
-            print ">> Creating new user... (Do not use :S as user name!!)"
+            print ">> Creating new user... (Do not use :S as Username!!)"
             create()
             return
         password = getpass.getpass(prompt='>> Password: ')
@@ -83,12 +83,25 @@ def create():
     sys.stdout.flush()
     usrName = sys.stdin.readline()
     while usrName == ":S\n":
-        print ">> This is an invalid username!"
+        print ">> This is an invalid Username!"
         sys.stdout.write(">> Username: ")
         sys.stdout.flush()
         usrName = sys.stdin.readline()
     password = getpass.getpass(prompt='>> Password: ')
     server.send(usrName[:-1] + " " + password)
+    
+    while server.recv(SIG_LENGTH) == FAIL:
+        print ">> This Username is already taken, please use another one."
+        sys.stdout.write(">> Username: ")
+        sys.stdout.flush()
+        usrName = sys.stdin.readline()
+        while usrName == ":S\n":
+            print ">> This is an invalid Username!"
+            sys.stdout.write(">> Username: ")
+            sys.stdout.flush()
+            usrName = sys.stdin.readline()
+        password = getpass.getpass(prompt='>> Password: ')
+        server.send(usrName[:-1] + " " + password)
 
 '''
 receiveFile(name):

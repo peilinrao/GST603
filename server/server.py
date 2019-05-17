@@ -37,6 +37,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(conn, addr, name):
+    print ">> " + user_name_dict[conn] + "uploading file..."
     if name in cloud_files:
         if user_name_dict[conn] != cloud_files[name]:
             conn.send(FAIL)
@@ -52,13 +53,12 @@ def receiveFile(conn, addr, name):
         conn.send(DONE)
 
 
-    print ">> " + user_name_dict[conn] + "uploading file..."
     f = open(name, "wb")
     package = conn.recv(2*PKG_SIZE)
     conn.send(DONE)
     while True:
         f.write(package)
-        print len(package)
+        # print len(package)
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
@@ -73,7 +73,7 @@ def receiveFile(conn, addr, name):
         f.write(name + " " + user_name_dict[conn] + "\n")
         f.close()
         cloud_files[name] = user_name_dict[conn]
-    message = "\n" + user_name_dict[conn] + " has uploaded " + name + " to cloud.\n"
+    message = ">> " + user_name_dict[conn] + " has uploaded " + name + " to cloud."
     print message
 
     broadcast(message, conn) # tell all clients a cloud file has been uploaded
@@ -359,6 +359,16 @@ def registerpolling(conn,addr):
                 message = conn.recv(MSG_BUF_SIZE)
                 if message:
                     temp = message.split()
+                    # prevent user w/ same name
+                    while temp[0] in user_data_dict:
+                        conn.send(FAIL)
+                        message = conn.recv(MSG_BUF_SIZE)
+                        if message:
+                            temp = message.split()
+                        else:
+                            remove(conn)
+                            return
+                    conn.send(DONE)
                     createNewUsr("user_data.txt", temp[0], temp[1])
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
