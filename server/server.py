@@ -40,8 +40,8 @@ def receiveFile(conn, addr, name):
     f = open(name, "wb")
     package = conn.recv(2*PKG_SIZE)
     conn.send(DONE)
-    while package[0] == "\b":
-        f.write(package[1:])
+    while package:
+        f.write(package)
         # print package
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
@@ -71,11 +71,10 @@ def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
         while package:
-            conn.send("\b"+package)
+            conn.send(package)
             package = f.read(PKG_SIZE)
             conn.recv(SIG_LENGTH)
 
-        conn.send(EOF)
         print ">> File downloaded by " + user_name_dict[conn]+ "."
     except:
         print ">> [Error: file cannot be uploaded.]"
