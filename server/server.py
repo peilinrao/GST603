@@ -373,7 +373,7 @@ def registerpolling(conn,addr):
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print ">> "+ temp[0] + " created and enters the chatroom\n"
+                    print ">> "+ temp[0] + " created and enters the chatroom"
                     #prints the message and address of the user who just sent the message on the server terminal
                     return
                 else:
