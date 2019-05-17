@@ -290,7 +290,7 @@ def main():
                         server.close()
                         sys.exit()
                     elif message == ":uf\n":  # upload file
-                        print ">> Type in the file name you want to upload: (please include the entire directory)"
+                        print ">> Type in the file name you want to upload:"
                         sys.stdout.flush()
                         file_dir = sys.stdin.readline()[:-1]
                         fileName = file_dir.split("/")

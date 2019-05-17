@@ -161,7 +161,7 @@ def clientthread(conn, addr):
                                 conn.send(DONE)
                                 receiveFile(conn, addr, fileName)
                             except:
-                                continue
+                                remove(conn)
                         elif message == FILE_REQUEST: # the client wants the file
                             # give user the cloud file directory
                             print ">> User requesting file..."
@@ -236,7 +236,7 @@ def broadcast(message,connection):
                 clients.send(message)
             except:
                 clients.close()
-                print ">> [Exception: cannot broadcast]"
+                print ">> [Exception: cannot broadcast to "+ user_name_dict[clients] + "]"
 
                 remove(clients)
 
@@ -336,7 +336,6 @@ def createNewUsr(input, name, password):
     try:
         f = open(input, "a+")
     except:
-        f.close()
         return
 
     f.write(name + " " + password + "\n")
