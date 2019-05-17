@@ -158,7 +158,7 @@ def sendFile(f):
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
 
-        server.send(EOF)
+        server.send(0b0)
         server.recv(SIG_LENGTH)
         print ">> File uploaded."
     except:
