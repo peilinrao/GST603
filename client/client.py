@@ -162,7 +162,7 @@ def sendFile(f):
 
         # sanity check
         while message != 'Y' and message != 'N':
-            sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+            sys.stdout.write(">> Invalid input. Please select (Y) or (N): ")
             sys.stdout.flush()
             message = sys.stdin.readline()[:-1]
 
@@ -208,10 +208,10 @@ def main():
         answer = sys.stdin.readline()[:-1]
         # sanity check
         while answer != 'Y' and answer != 'N':
-            sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+            sys.stdout.write(">> Invalid input. Please select (Y) or (N): ")
             sys.stdout.flush()
-            message = sys.stdin.readline()[:-1]
-            
+            answer = sys.stdin.readline()[:-1]
+
         if answer == "Y":
             IP_address = str(lines[0][:-1])
             Port = int(lines[1])
@@ -245,9 +245,9 @@ def main():
             answer = sys.stdin.readline()[:-1]
             # sanity check
             while answer != 'Y' and answer != 'N':
-                sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+                sys.stdout.write(">> Invalid input. Please select (Y) or (N): ")
                 sys.stdout.flush()
-                message = sys.stdin.readline()[:-1]
+                answer = sys.stdin.readline()[:-1]
 
             if answer == "Y":
                 f.write(ip_temp+"\n")
