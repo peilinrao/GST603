@@ -9,7 +9,7 @@ from time import sleep
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
-EOF = "\0\0\0"
+EOF = "ECE"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
@@ -103,10 +103,12 @@ def receiveFile(name):
     package = server.recv(2*PKG_SIZE)
     server.send(DONE)
     while package[0] == "\b":
+        print("Hey")
         f.write(package[1:])
         # print package
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
+    print(package)    
 
     f.close()
     print name + " has been successfully downloaded"
