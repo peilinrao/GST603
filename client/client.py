@@ -206,7 +206,12 @@ def main():
         sys.stdout.write(">> Yes(Y)/No(N): ")
         sys.stdout.flush()
         answer = sys.stdin.readline()[:-1]
-        # Assume user is kind
+        # sanity check
+        while answer != 'Y' and answer != 'N':
+            sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+            sys.stdout.flush()
+            message = sys.stdin.readline()[:-1]
+            
         if answer == "Y":
             IP_address = str(lines[0][:-1])
             Port = int(lines[1])
