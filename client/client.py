@@ -144,14 +144,17 @@ OUTPUT:      none
 SIDEEFFECTS: upload the file to server
 '''
 def sendFile(f):
+    print("sendFile is called!")
     try:
         package = f.read(PKG_SIZE)
         while package:
+            print(">> Uploading file")
             server.send("\b"+package)
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
 
         server.send(EOF)
+        print(">> EOF send, waiting for sever receive")
         server.recv(SIG_LENGTH)
         print ">> File uploaded."
     except:
@@ -215,7 +218,7 @@ def main():
                 f.write(str(port_temp)+"\n")
             break
         f.close()
-        
+
     print ">> Welcome to GST603 Chatroom!"
     login()
     while True:
@@ -241,10 +244,15 @@ def main():
                         fileName = file_dir.split("/")
                         # print file_dir
                         try:
+                            print(">> ACKing the server that a file will be send.")
                             f = open(file_dir, "rb")
+                            print(">> Sending a FILE_UPLOADING sig to the server")
                             server.send(FILE_UPLOADING)
+                            print(">> Waiting for SIG_LENGTH")
                             server.recv(SIG_LENGTH)
+                            print(">> Sending a fileName[-1] sig")
                             server.send(fileName[-1])
+                            print(">> Waiting for SIG_LENGTH")
                             server.recv(SIG_LENGTH)
                             sendFile(f)
                             f.close()
