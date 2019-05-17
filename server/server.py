@@ -17,7 +17,7 @@ PASS_ERR = "\b"
 FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
-SIG_LENGTH = 4
+SIG_LENGTH = 50
 FILEMODE = True
 
 # globals
@@ -43,7 +43,7 @@ def receiveFile(conn, addr, name):
     conn.send(DONE)
     while True:
         f.write(package)
-        print len("\0\b\0")
+        print len(package)
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
