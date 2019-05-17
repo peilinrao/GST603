@@ -46,7 +46,7 @@ def receiveFile(conn, addr, name):
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
-        if package == 000:
+        if package == 0b0:
             break
 
     f.close()
