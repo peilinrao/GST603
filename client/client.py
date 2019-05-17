@@ -110,7 +110,7 @@ def receiveFile(name):
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
 
-        if len(package) == 3 and '\0' == c for c in package:
+        if len(package) == 3:
             break
     # for c in package:
     #    print ord(c)
