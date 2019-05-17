@@ -106,7 +106,7 @@ def receiveFile(name):
     while True:
         # print("Hey")
         f.write(package)
-        # print package
+        print len(package)
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
 
