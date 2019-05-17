@@ -8,7 +8,7 @@ import os
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
-EOF = "ECE"
+EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
@@ -42,7 +42,7 @@ def receiveFile(conn, addr, name):
     conn.send(DONE)
     while True:
         f.write(package)
-        print len(package)
+        print sys.getsizeof(package)
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 

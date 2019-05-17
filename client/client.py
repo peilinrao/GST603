@@ -9,7 +9,7 @@ from time import sleep
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
 FILE_REQUEST = "\n\n"
-EOF = "ECE"
+EOF = "\0\0\0"
 DONE = "\n\n\n"
 FAIL = "\b\b\b"
 NO_EXIST = "\b\0"
