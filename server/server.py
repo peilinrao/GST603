@@ -37,6 +37,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(conn, addr, name):
+    print ">> " + user_name_dict[conn] + "uploading file..."
     f = open(name, "wb")
     package = conn.recv(2*PKG_SIZE)
     conn.send(DONE)
@@ -46,7 +47,7 @@ def receiveFile(conn, addr, name):
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
-        if len(package) == 3:
+        if len(package) == 3 and package == "\0\0\0":
             break
 
     f.close()
