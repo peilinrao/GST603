@@ -151,6 +151,27 @@ OUTPUT:      none
 SIDEEFFECTS: upload the file to server
 '''
 def sendFile(f):
+    message = server.recv(SIG_LENGTH)
+    if message == FAIL:
+        print ">> File with the same name is already uploaded by other user. Rename the file and try again."
+        return
+    elif message == FILE_REMOVE:
+        sys.stdout.write(">> You have already uploaded a file with the same name. Do you want to overwrite the old file? (Y/N) ")
+        sys.stdout.flush()
+        message = sys.stdin.readline()[:-1]
+
+        # sanity check
+        while message != 'Y' and message != 'N':
+            sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+            sys.stdout.flush()
+            message = sys.stdin.readline()[:-1]
+
+        if message == 'Y':
+            server.send(DONE)
+        else:
+            server.send(FAIL)
+            print ">> You have aborted uploading process."
+
     try:
         package = f.read(PKG_SIZE)
         while package:
@@ -216,7 +237,12 @@ def main():
             sys.stdout.write(">> Yes(Y)/No(N): ")
             sys.stdout.flush()
             answer = sys.stdin.readline()[:-1]
-            # Assume user is kind
+            # sanity check
+            while answer != 'Y' and answer != 'N':
+                sys.stdout.write(">> Invalid input. Please select from Y and N: ")
+                sys.stdout.flush()
+                message = sys.stdin.readline()[:-1]
+
             if answer == "Y":
                 f.write(ip_temp+"\n")
                 f.write(str(port_temp)+"\n")

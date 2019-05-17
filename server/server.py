@@ -37,6 +37,21 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(conn, addr, name):
+    if name in cloud_files:
+        if user_name_dict[conn] != cloud_files[name]:
+            conn.send(FAIL)
+            return
+        else:
+            conn.send(FILE_REMOVE)
+
+        message = conn.recv(SIG_LENGTH)
+        if message == FAIL:
+            print ">> User aborted uploading process."
+            return
+    else:
+        conn.send(DONE)
+
+
     print ">> " + user_name_dict[conn] + "uploading file..."
     f = open(name, "wb")
     package = conn.recv(2*PKG_SIZE)
