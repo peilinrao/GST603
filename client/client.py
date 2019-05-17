@@ -110,7 +110,7 @@ def receiveFile(name):
         package = server.recv(2*PKG_SIZE)
         server.send(DONE)
 
-        if package == 0b0:
+        if len(package) == 3 and '\0' == c for c in package:
             break
     # for c in package:
     #    print ord(c)
@@ -158,7 +158,7 @@ def sendFile(f):
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
 
-        server.send(0b0)
+        server.send(EOF)
         server.recv(SIG_LENGTH)
         print ">> File uploaded."
     except:
