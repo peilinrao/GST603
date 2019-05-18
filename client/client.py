@@ -311,7 +311,7 @@ def main():
                         server.send(FILE_REQUEST)
                         message = server.recv(MSG_BUF_SIZE)
                         # server.send(DONE)
-                        print ">> Please choose one file to donwload:\n" + message
+                        print ">> Please choose one file to download:\n" + message
                         sys.stdout.flush()
                         fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
                         server.send(fileName)

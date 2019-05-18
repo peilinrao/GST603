@@ -161,7 +161,7 @@ def clientthread(conn, addr):
                                 conn.send(DONE)
                                 receiveFile(conn, addr, fileName)
                             except:
-                                remove(conn)
+                                continue
                         elif message == FILE_REQUEST: # the client wants the file
                             # give user the cloud file directory
                             print ">> User requesting file..."
