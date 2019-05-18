@@ -94,7 +94,7 @@ def sendFile(f, conn):
             package = f.read(PKG_SIZE)
             conn.recv(SIG_LENGTH)
 
-        while server.recv(SIG_LENGTH) != len(EOF):
+        while conn.send(EOF) != len(EOF):
             continue
 
         print ">> File downloaded by " + user_name_dict[conn]+ "."
