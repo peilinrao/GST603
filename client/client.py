@@ -191,13 +191,14 @@ def sendFile(f):
         package = f.read(PKG_SIZE)
         while package:
             server.send(package)
+            print(">> Package sent. Now trying to send the next package.")
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
 
         while server.send(EOF) != len(EOF):
             continue
 
-        print ">> File uploaded."
+        print ">> EOF sent. File uploaded."
     except:
         print ">> [ERROR: Cannot upload file.] "
         return
