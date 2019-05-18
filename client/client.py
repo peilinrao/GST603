@@ -190,8 +190,10 @@ def sendFile(f):
 
     try:
         package = f.read(PKG_SIZE)
+        print(package)
         while package:
             server.send(package)
+            print(package)
             print(">> Package sent. Now trying to send the next package.")
             package = f.read(PKG_SIZE)
             server.recv(SIG_LENGTH)
