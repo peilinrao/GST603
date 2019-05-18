@@ -94,9 +94,11 @@ SIDEEFFECTS: upload the file to server
 def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
+        print(package)
         while package:
             conn.send(package)
             package = f.read(PKG_SIZE)
+            print(package)
             conn.recv(SIG_LENGTH)
 
         while conn.send(EOF) != len(EOF):
