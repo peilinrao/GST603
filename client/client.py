@@ -3,8 +3,10 @@ import select
 import sys
 import getpass
 import time
+import os
 from time import sleep
 
+# constants
 # constants
 FILE_NO_EXIST = "\b\b"
 FILE_UPLOADING = "\0\0"
@@ -19,7 +21,9 @@ FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 128
+STRFORMATSIZE = 37
 FILEMODE = True
+SERVER_MODE = False
 
 # Global
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,29 +116,36 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(name):
-    f = open(name, "wb")
-    package = server.recv(PKG_SIZE)
-    print(package)
+    fileSize = int(server.recv(MSG_BUF_SIZE))
+    # print fileSize
     server.send(DONE)
+    f = open(name, "wb")
+
+    temp = 0
+    # conn.setblocking(False)
+    package = server.recv(PKG_SIZE)
+    # print(package)
+    # server.send(DONE)
     while True:
         # print("Hey")
+        temp += sys.getsizeof(package) - STRFORMATSIZE
         f.write(package)
+        if temp >= fileSize:
+            break
         # print len(package)
         package = server.recv(PKG_SIZE)
-        print(package)
-        server.send(DONE)
-
-        if package == EOF:
-            break
+        # print(package)
+        # server.send(DONE)
     # for c in package:
     #    print ord(c)
 
     f.close()
-    server.send(EOF)
+    # conn.setblocking(True)
+    # server.send(EOF)
     print name + " has been successfully downloaded"
 
     # server.send(DONE)
-
+"""
 '''
 receiveFile():
 DESCRIPTION: remove a file from the server
@@ -157,6 +168,82 @@ def removeFile():
             print ">> File failed to remove."
         else:
             print ">> File successfully removed."
+"""
+'''
+receiveFile():
+DESCRIPTION: remove a file from the server
+INPUT:       none
+OUTPUT:      none
+SIDEEFFECTS: remove a file from the server
+'''
+def removeFile():
+    message = server.recv(MSG_BUF_SIZE)
+    if message == FAIL:
+        return
+    else:
+        print ">> Choose one from the following files to remove from cloud:"
+        print message
+        sys.stdout.flush()
+        message = sys.stdin.readline()[:-1]
+        server.send(message)
+        message = server.recv(SIG_LENGTH)
+        if message == FAIL:
+            print ">> File failed to remove."
+        else:
+            print ">> File successfully removed."
+"""
+'''
+sendFile(f):
+DESCRIPTION: upload file to server
+INPUT:       file handler
+OUTPUT:      none
+SIDEEFFECTS: upload the file to server
+'''
+def sendFile(f):
+    message = server.recv(SIG_LENGTH)
+    if message == FAIL:
+        print ">> File with the same name is already uploaded by other user. Rename the file and try again."
+        return
+    elif message == FILE_REMOVE:
+        sys.stdout.write(">> You have already uploaded a file with the same name. Do you want to overwrite the old file? (Y/N) ")
+        sys.stdout.flush()
+        message = sys.stdin.readline()[:-1]
+
+        # sanity check
+        while message != 'Y' and message != 'N':
+            sys.stdout.write(">> Invalid input. Please select (Y) or (N): ")
+            sys.stdout.flush()
+            message = sys.stdin.readline()[:-1]
+
+        if message == 'Y':
+            server.send(DONE)
+        else:
+            server.send(FAIL)
+            print ">> You have aborted uploading process."
+            return
+
+    try:
+        # temp = 0
+        package = f.read(PKG_SIZE)
+        # print(package)
+        while package:
+            # temp += sys.getsizeof(package)
+            server.send(package)
+            # print(package)
+            print(">> Package sent. Now trying to send the next package.")
+            package = f.read(PKG_SIZE)
+            server.recv(SIG_LENGTH)
+
+        while server.send(EOF) != len(EOF):
+            continue
+
+        # print temp
+        print ">> EOF sent. File uploaded."
+    except:
+        print ">> [ERROR: Cannot upload file.] "
+        return
+"""
+
 
 '''
 sendFile(f):
@@ -189,19 +276,22 @@ def sendFile(f):
             return
 
     try:
+        # temp = 0
         package = f.read(PKG_SIZE)
-        print(package)
+        # print(package)
         while package:
+            # temp += sys.getsizeof(package)
             server.send(package)
-            print(package)
-            print(">> Package sent. Now trying to send the next package.")
+            # print(package)
+            # print(">> Package sent. Now trying to send the next package.")
             package = f.read(PKG_SIZE)
-            server.recv(SIG_LENGTH)
+            # server.recv(SIG_LENGTH)
 
-        while server.send(EOF) != len(EOF):
-            continue
+        # while server.send(EOF) != len(EOF):
+        #     continue
 
-        print ">> EOF sent. File uploaded."
+        # print temp
+        print ">> File uploaded."
     except:
         print ">> [ERROR: Cannot upload file.] "
         return
@@ -300,25 +390,35 @@ def main():
                         # print file_dir
                         try:
                             f = open(file_dir, "rb")
-                            server.send(FILE_UPLOADING)
-                            server.recv(SIG_LENGTH)
-                            server.send(fileName[-1])
-                            server.recv(SIG_LENGTH)
-                            sendFile(f)
-                            f.close()
                         except:
                             print ">> No such file."
-                            f.close()
+                            continue
+
+                        temp = os.stat(file_dir)
+                        fileSize = temp.st_size
+                        server.send(FILE_UPLOADING)
+                        server.recv(SIG_LENGTH)
+                        server.send(fileName[-1])
+                        server.recv(SIG_LENGTH)
+                        server.send(str(fileSize))
+                        sendFile(f)
+                        f.close()
 
                     elif message == ":df\n":  # download file from cloud
                         server.send(FILE_REQUEST)
                         message = server.recv(MSG_BUF_SIZE)
+                        if message == FAIL:
+                            print ">> No file on cloud."
+                            continue
                         # server.send(DONE)
                         print ">> Please choose one file to download:\n" + message
                         sys.stdout.flush()
                         fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
                         server.send(fileName)
+                        # print "ha"
                         message = server.recv(SIG_LENGTH)
+                        # print "pi"
+                        server.send(DONE)
                         if message == DONE:
                             receiveFile(fileName)
                         else:

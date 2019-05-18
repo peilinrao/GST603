@@ -18,6 +18,7 @@ FILE_REMOVE = "\b\0\b"
 MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 128
+STRFORMATSIZE = 37
 FILEMODE = True
 SERVER_MODE = False
 
@@ -27,6 +28,73 @@ cloud_files = {}
 user_name_dict = {}
 user_data_dict = {}
 
+
+'''
+receiveFile(conn, addr, name):
+DESCRIPTION: receive a file from client
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+             name: name of the uploaded file
+OUTPUT:      none
+SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
+             done. Notice other users about arrival of a file.
+'''
+def receiveFile(conn, addr, name):
+    fileSize = int(conn.recv(MSG_BUF_SIZE))
+    # print fileSize
+
+    print ">> " + user_name_dict[conn] + " uploading file..."
+    if name in cloud_files:
+        if user_name_dict[conn] != cloud_files[name]:
+            conn.send(FAIL)
+            return
+        else:
+            conn.send(FILE_REMOVE)
+
+            message = conn.recv(SIG_LENGTH)
+            if message == FAIL:
+                print ">> User aborted uploading process."
+                return
+    else:
+        conn.send(DONE)
+
+
+    temp = 0
+    f = open(name, "wb")
+    # conn.setblocking(False)
+    package = conn.recv(PKG_SIZE)
+    # print(package)
+    # conn.send(DONE)
+    while True:
+        temp += sys.getsizeof(package) - STRFORMATSIZE
+        # print temp
+        f.write(package)
+        if temp >= fileSize:
+            print ">> Done receiving"
+            break
+        # print ">> Package received, fetching next package."
+        package = conn.recv(PKG_SIZE)
+        # print(package)
+        # conn.send(DONE)
+
+    f.close()
+    # conn.setblocking(True)
+    # print temp
+    # conn.send(EOF)
+
+    # update the directory
+    if name not in cloud_files:
+        f = open("cloudFileDir.txt", "a+")
+        f.write(name + " " + user_name_dict[conn] + "\n")
+        f.close()
+        cloud_files[name] = user_name_dict[conn]
+    message = ">> " + user_name_dict[conn] + " has uploaded " + name + " to cloud."
+    print message
+
+    broadcast(message, conn) # tell all clients a cloud file has been uploaded
+
+
+"""
 '''
 receiveFile(conn, addr, name):
 DESCRIPTION: receive a file from client
@@ -54,16 +122,17 @@ def receiveFile(conn, addr, name):
         conn.send(DONE)
 
 
+    # temp = 0
     f = open(name, "wb")
     package = conn.recv(PKG_SIZE)
-    print(package)
+    # print(package)
     conn.send(DONE)
     while True:
-
+        # temp += sys.getsizeof(package)
         f.write(package)
         print ">> Package received, fetching next package."
         package = conn.recv(PKG_SIZE)
-        print(package)
+        # print(package)
         conn.send(DONE)
 
         if package == EOF:
@@ -71,6 +140,7 @@ def receiveFile(conn, addr, name):
             break
 
     f.close()
+    # print temp
     # conn.send(EOF)
 
     # update the directory
@@ -84,6 +154,8 @@ def receiveFile(conn, addr, name):
 
     broadcast(message, conn) # tell all clients a cloud file has been uploaded
 
+"""
+
 '''
 sendFile(f, conn):
 DESCRIPTION: upload file to server
@@ -94,11 +166,36 @@ SIDEEFFECTS: upload the file to server
 def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
-        print(package)
+        # print(package)
         while package:
             conn.send(package)
             package = f.read(PKG_SIZE)
-            print(package)
+            # print(package)
+            # conn.recv(SIG_LENGTH)
+
+        # while conn.send(EOF) != len(EOF):
+        #     continue
+
+        print ">> File downloaded by " + user_name_dict[conn]+ "."
+    except:
+        print ">> [Error: file cannot be uploaded.]"
+        return
+"""
+'''
+sendFile(f, conn):
+DESCRIPTION: upload file to server
+INPUT:       file handler
+OUTPUT:      none
+SIDEEFFECTS: upload the file to server
+'''
+def sendFile(f, conn):
+    try:
+        package = f.read(PKG_SIZE)
+        # print(package)
+        while package:
+            conn.send(package)
+            package = f.read(PKG_SIZE)
+            # print(package)
             conn.recv(SIG_LENGTH)
 
         while conn.send(EOF) != len(EOF):
@@ -108,6 +205,7 @@ def sendFile(f, conn):
     except:
         print ">> [Error: file cannot be uploaded.]"
         return
+"""
 
 '''
 removeFile(conn):
@@ -173,20 +271,34 @@ def clientthread(conn, addr):
                             print ">> User requesting file..."
                             try:
                                 message = ""
+                                if not cloud_files:
+                                    conn.send(FAIL)
+                                    continue
                                 for elements in cloud_files:
                                     message += elements + "\n"
                                 try:
                                     conn.send(message)
                                     # message = conn.recv(SIG_LENGTH)    # wait for response
                                     message = conn.recv(MSG_BUF_SIZE)
+                                    temp = os.stat(message)
+                                    fileSize = temp.st_size
                                     if message:
                                         try:
                                             f = open(message, "rb")
-                                            conn.send(DONE)
-                                            sendFile(f, conn)
-                                            f.close()
                                         except:
                                             conn.send(FAIL)
+                                            conn.recv(SIG_LENGTH)
+                                            continue
+
+                                        conn.send(DONE)
+                                        conn.recv(SIG_LENGTH)
+                                        # print "ha"
+                                        conn.send(str(fileSize))
+                                        conn.recv(SIG_LENGTH)
+                                        # print "pi"
+
+                                        sendFile(f, conn)
+                                        f.close()
                                     else:
                                         remove(conn)
                                 except:
@@ -345,7 +457,7 @@ def createNewUsr(input, name, password):
         return
 
     f.write(name + " " + password + "\n")
-    readUsrData(input)
+    user_data_dict[name] = password
 
     f.close()
 
