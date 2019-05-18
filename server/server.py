@@ -56,12 +56,14 @@ def receiveFile(conn, addr, name):
 
     f = open(name, "wb")
     package = conn.recv(PKG_SIZE)
+    print(package)
     conn.send(DONE)
     while True:
 
         f.write(package)
         print ">> Package received, fetching next package."
         package = conn.recv(PKG_SIZE)
+        print(package)
         conn.send(DONE)
 
         if package == EOF:
