@@ -66,7 +66,7 @@ def receiveFile(conn, addr, name):
             break
 
     f.close()
-    conn.send(EOF)
+    # conn.send(EOF)
 
     # update the directory
     if name not in cloud_files:
