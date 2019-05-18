@@ -19,6 +19,7 @@ MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 128
 FILEMODE = True
+SERVER_MODE = False
 
 # globals
 list_of_clients = []
@@ -57,12 +58,14 @@ def receiveFile(conn, addr, name):
     package = conn.recv(2*PKG_SIZE)
     conn.send(DONE)
     while True:
+
         f.write(package)
-        # print len(package)
+        print ">> Package received, fetching next package."
         package = conn.recv(2*PKG_SIZE)
         conn.send(DONE)
 
         if package == EOF:
+            print ">> Package EOF received"
             break
 
     f.close()
@@ -435,12 +438,15 @@ with any two hosts
 The second argument is the type of socket. SOCK_STREAM means that data or characters are read in a continuous flow
 """
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-if len(sys.argv) != 3:
-    print "Correct usage: script, IP address, port number"
-    exit()
-IP_address = str(sys.argv[1])
-Port = int(sys.argv[2])
-server.bind((IP_address, Port))
+if SERVER_MODE:
+    server.bind(("10.142.0.2", 7000))
+else:
+    if len(sys.argv) != 3:
+        print "Correct usage: script, IP address, port number"
+        exit()
+    IP_address = str(sys.argv[1])
+    Port = int(sys.argv[2])
+    server.bind((IP_address, Port))
 #binds the server to an entered IP address and at the specified port number. The client must be aware of these parameters
 server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
