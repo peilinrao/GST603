@@ -41,9 +41,8 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(conn, addr, name):
     fileSize = int(conn.recv(MSG_BUF_SIZE))
-    # print fileSize
 
-    print ">> " + user_name_dict[conn] + " uploading file..."
+    print(">> " + user_name_dict[conn] + " uploading file...")
     if name in cloud_files:
         if user_name_dict[conn] != cloud_files[name]:
             conn.send(FAIL)
@@ -53,7 +52,7 @@ def receiveFile(conn, addr, name):
 
             message = conn.recv(SIG_LENGTH)
             if message == FAIL:
-                print ">> User aborted uploading process."
+                print(">> User aborted uploading process.")
                 return
     else:
         conn.send(DONE)
@@ -61,26 +60,16 @@ def receiveFile(conn, addr, name):
 
     temp = 0
     f = open(name, "wb")
-    # conn.setblocking(False)
     package = conn.recv(PKG_SIZE)
-    # print(package)
-    # conn.send(DONE)
     while True:
         temp += sys.getsizeof(package) - STRFORMATSIZE
-        # print temp
         f.write(package)
         if temp >= fileSize:
-            print ">> Done receiving"
+            print(">> Done receiving")
             break
-        # print ">> Package received, fetching next package."
         package = conn.recv(PKG_SIZE)
-        # print(package)
-        # conn.send(DONE)
 
     f.close()
-    # conn.setblocking(True)
-    # print temp
-    # conn.send(EOF)
 
     # update the directory
     if name not in cloud_files:
@@ -89,72 +78,10 @@ def receiveFile(conn, addr, name):
         f.close()
         cloud_files[name] = user_name_dict[conn]
     message = ">> " + user_name_dict[conn] + " has uploaded " + name + " to cloud."
-    print message
+    print(message)
 
     broadcast(message, conn) # tell all clients a cloud file has been uploaded
 
-
-"""
-'''
-receiveFile(conn, addr, name):
-DESCRIPTION: receive a file from client
-INPUT:       conn: socket of the client
-             addr: IP address of the client
-             name: name of the uploaded file
-OUTPUT:      none
-SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
-             done. Notice other users about arrival of a file.
-'''
-def receiveFile(conn, addr, name):
-    print ">> " + user_name_dict[conn] + " uploading file..."
-    if name in cloud_files:
-        if user_name_dict[conn] != cloud_files[name]:
-            conn.send(FAIL)
-            return
-        else:
-            conn.send(FILE_REMOVE)
-
-            message = conn.recv(SIG_LENGTH)
-            if message == FAIL:
-                print ">> User aborted uploading process."
-                return
-    else:
-        conn.send(DONE)
-
-
-    # temp = 0
-    f = open(name, "wb")
-    package = conn.recv(PKG_SIZE)
-    # print(package)
-    conn.send(DONE)
-    while True:
-        # temp += sys.getsizeof(package)
-        f.write(package)
-        print ">> Package received, fetching next package."
-        package = conn.recv(PKG_SIZE)
-        # print(package)
-        conn.send(DONE)
-
-        if package == EOF:
-            print ">> Package EOF received"
-            break
-
-    f.close()
-    # print temp
-    # conn.send(EOF)
-
-    # update the directory
-    if name not in cloud_files:
-        f = open("cloudFileDir.txt", "a+")
-        f.write(name + " " + user_name_dict[conn] + "\n")
-        f.close()
-        cloud_files[name] = user_name_dict[conn]
-    message = ">> " + user_name_dict[conn] + " has uploaded " + name + " to cloud."
-    print message
-
-    broadcast(message, conn) # tell all clients a cloud file has been uploaded
-
-"""
 
 '''
 sendFile(f, conn):
@@ -166,46 +93,15 @@ SIDEEFFECTS: upload the file to server
 def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
-        # print(package)
         while package:
             conn.send(package)
             package = f.read(PKG_SIZE)
-            # print(package)
-            # conn.recv(SIG_LENGTH)
 
-        # while conn.send(EOF) != len(EOF):
-        #     continue
-
-        print ">> File downloaded by " + user_name_dict[conn]+ "."
+        print(">> File downloaded by " + user_name_dict[conn]+ ".")
     except:
-        print ">> [Error: file cannot be uploaded.]"
+        print(">> [Error: file cannot be uploaded.]")
         return
-"""
-'''
-sendFile(f, conn):
-DESCRIPTION: upload file to server
-INPUT:       file handler
-OUTPUT:      none
-SIDEEFFECTS: upload the file to server
-'''
-def sendFile(f, conn):
-    try:
-        package = f.read(PKG_SIZE)
-        # print(package)
-        while package:
-            conn.send(package)
-            package = f.read(PKG_SIZE)
-            # print(package)
-            conn.recv(SIG_LENGTH)
 
-        while conn.send(EOF) != len(EOF):
-            continue
-
-        print ">> File downloaded by " + user_name_dict[conn]+ "."
-    except:
-        print ">> [Error: file cannot be uploaded.]"
-        return
-"""
 
 '''
 removeFile(conn):
@@ -236,7 +132,7 @@ def removeFile(conn):
 
     cloud_files.pop(message)
     conn.send(DONE)
-    print ">> " + message + " has been removed."
+    print(">> " + message + " has been removed.")
 
 '''
 clientthread(conn, addr):
@@ -268,7 +164,7 @@ def clientthread(conn, addr):
                                 continue
                         elif message == FILE_REQUEST: # the client wants the file
                             # give user the cloud file directory
-                            print ">> User requesting file..."
+                            print(">> User requesting file...")
                             try:
                                 message = ""
                                 if not cloud_files:
@@ -292,10 +188,8 @@ def clientthread(conn, addr):
 
                                         conn.send(DONE)
                                         conn.recv(SIG_LENGTH)
-                                        # print "ha"
                                         conn.send(str(fileSize))
                                         conn.recv(SIG_LENGTH)
-                                        # print "pi"
 
                                         sendFile(f, conn)
                                         f.close()
@@ -322,9 +216,8 @@ def clientthread(conn, addr):
                                 if message[1] == "\n":
                                     continue
                             message_to_send = "<" + user_name_dict[conn] + "> " + message
-                            print message_to_send
+                            print(message_to_send)
                             broadcast(message_to_send,conn)
-                            #prints the message and address of the user who just sent the message on the server terminal
                     else:
                         if message[0] == "\n":
                             if len(message) == 1:
@@ -332,7 +225,7 @@ def clientthread(conn, addr):
                             if message[1] == "\n":
                                 continue
                         message_to_send = "<" + user_name_dict[conn] + "> " + message
-                        print message_to_send
+                        print(message_to_send)
                         broadcast(message_to_send,conn)
                 else:
                     remove(conn)
@@ -354,7 +247,7 @@ def broadcast(message,connection):
                 clients.send(message)
             except:
                 clients.close()
-                print ">> [Exception: cannot broadcast to "+ user_name_dict[clients] + "]"
+                print(">> [Exception: cannot broadcast to "+ user_name_dict[clients] + "]")
 
                 remove(clients)
 
@@ -368,7 +261,7 @@ SIDEEFFECTS: remove a user from online list
 def remove(connection):
     if connection in list_of_clients:
         broadcast_m = ">> User " + user_name_dict[connection] + " exited the chatroom."
-        print broadcast_m
+        print(broadcast_m)
         broadcast(broadcast_m,connection)
         list_of_clients.remove(connection)
         user_name_dict.remove(connection)
@@ -392,8 +285,6 @@ def readUsrData(input):
         temp = line.split()
         user_data_dict[temp[0]] = temp[1]
 
-    # print user_data_dict
-
     f.close()
 
 '''
@@ -415,8 +306,6 @@ def txtToDict(input, dict):
         temp = line.split()
         dict[temp[0]] = temp[1]
 
-    # print user_data_dict
-
     f.close()
 
 '''
@@ -436,8 +325,6 @@ def txtToList(input, list):
     list = []
     for line in f.readlines():
         list.append(line[:-1])
-
-    # print user_data_dict
 
     f.close()
 
@@ -470,7 +357,6 @@ OUTPUT:      none
 SIDEEFFECTS: deal with user registration, created as a thread
 '''
 def registerpolling(conn,addr):
-    # print "Creating new user...\n"
     while True:
             try:
                 message = conn.recv(MSG_BUF_SIZE)
@@ -490,7 +376,7 @@ def registerpolling(conn,addr):
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print ">> "+ temp[0] + " created and enters the chatroom"
+                    print(">> "+ temp[0] + " created and enters the chatroom")
                     #prints the message and address of the user who just sent the message on the server terminal
                     return
                 else:
@@ -518,17 +404,17 @@ def signinpolling(conn, addr):
                                 list_of_clients.append(conn)
                                 user_name_dict[conn] = temp[0]
                                 start_new_thread(clientthread,(conn,addr))
-                                print ">> "+ temp[0] + " enters the chatroom."
+                                print(">> "+ temp[0] + " enters the chatroom.")
                                 #prints the message and address of the user who just sent the message on the server terminal
                                 return
                             else:
                                 conn.send(PASS_ERR)
-                                print ">> Password not correct for " + temp[0] + "."
+                                print(">> Password not correct for " + temp[0] + ".")
                                 continue
                         else:
                             conn.send(NO_EXIST)
                             # list_of_clients.remove(conn)
-                            print ">> No existing user.\n"
+                            print(">> No existing user.\n")
                             continue
                     else:
                         start_new_thread(registerpolling,(conn,addr))
@@ -558,7 +444,7 @@ if SERVER_MODE:
     server.bind(("10.142.0.2", 7000))
 else:
     if len(sys.argv) != 3:
-        print "Correct usage: script, IP address, port number"
+        print("Correct usage: script, IP address, port number")
         exit()
     IP_address = str(sys.argv[1])
     Port = int(sys.argv[2])
@@ -568,7 +454,7 @@ server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
 txtToDict("cloudFileDir.txt", cloud_files)
-print ">> GST603 server booted!"
+print(">> GST603 server booted!")
 
 while True:
     conn, addr = server.accept()
@@ -579,9 +465,9 @@ while True:
 
     # check for log in
 
-    print ">> " + addr[0] + " connected"
-    #maintains a list of clients for ease of broadcasting a message to all available people in the chatroom
-    #Prints the address of the person who just connected
+    print(">> " + addr[0] + " connected")
+    # maintains a list of clients for ease of broadcasting a message to all available people in the chatroom
+    # Prints the address of the person who just connected
     message = conn.recv(200)
     if message:
         if message != NEW_USR:
@@ -591,16 +477,16 @@ while True:
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
                     start_new_thread(clientthread,(conn,addr))
-                    print ">> " + temp[0] + " enters the chatroom."
+                    print(">> " + temp[0] + " enters the chatroom.")
 
                     #creates and individual thread for every user that connects
                 else:
                     conn.send(PASS_ERR)
-                    print ">> Password not correct for " + temp[0] + "."
+                    print(">> Password not correct for " + temp[0] + ".")
                     start_new_thread(signinpolling,(conn,addr))
             else:
                 conn.send(NO_EXIST)
-                print ">> No existing user."
+                print(">> No existing user.")
                 start_new_thread(signinpolling,(conn,addr))
         else:
             start_new_thread(registerpolling,(conn,addr))
