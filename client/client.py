@@ -71,7 +71,7 @@ def login():
             return
         password = getpass.getpass(prompt='>> Password: ')
         server.send((usrName[:-1] + " " + password).encode())
-        message = server.recv(200)
+        message = server.recv(200).decode()
         if message == PASS_ERR:
             print(">> Password incorrect.")
             continue
@@ -102,7 +102,7 @@ def create():
     password = getpass.getpass(prompt='>> Password: ')
     server.send((usrName[:-1] + " " + password).encode())
 
-    while server.recv(SIG_LENGTH) == FAIL:
+    while server.recv(SIG_LENGTH).decode() == FAIL:
         print(">> This Username is already taken, please use another one.")
         sys.stdout.write(">> Username: ")
         sys.stdout.flush()
@@ -124,18 +124,18 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(name):
-    fileSize = int(server.recv(MSG_BUF_SIZE))
+    fileSize = int(server.recv(MSG_BUF_SIZE).decode())
     server.send((DONE).encode())
     f = open(name, "wb")
 
     temp = 0
-    package = server.recv(PKG_SIZE)
+    package = server.recv(PKG_SIZE).decode()
     while True:
         temp += sys.getsizeof(package) - STRFORMATSIZE
         f.write(package)
         if temp >= fileSize:
             break
-        package = server.recv(PKG_SIZE)
+        package = server.recv(PKG_SIZE).decode()
     f.close()
     print(name + " has been successfully downloaded.")
 
@@ -147,7 +147,7 @@ OUTPUT:      none
 SIDEEFFECTS: remove a file from the server
 '''
 def removeFile():
-    message = server.recv(MSG_BUF_SIZE)
+    message = server.recv(MSG_BUF_SIZE).decode()
     if message == FAIL:
         return
     else:
@@ -156,7 +156,7 @@ def removeFile():
         sys.stdout.flush()
         message = sys.stdin.readline()[:-1]
         server.send((message).encode())
-        message = server.recv(SIG_LENGTH)
+        message = server.recv(SIG_LENGTH).decode()
         if message == FAIL:
             print(">> File failed to remove.")
         else:
@@ -171,7 +171,7 @@ OUTPUT:      none
 SIDEEFFECTS: upload the file to server
 '''
 def sendFile(f):
-    message = server.recv(SIG_LENGTH)
+    message = server.recv(SIG_LENGTH).decode()
     if message == FAIL:
         print(">> File with the same name is already uploaded by other user. Rename the file and try again.")
         return
@@ -187,16 +187,16 @@ def sendFile(f):
             message = sys.stdin.readline()[:-1]
 
         if message == 'Y':
-            server.send((DONE).encode())
+            server.send(DONE.encode())
         else:
-            server.send((FAIL).encode())
+            server.send(FAIL.encode())
             print(">> You have aborted uploading process.")
             return
 
     try:
         package = f.read(PKG_SIZE)
         while package:
-            server.send((package).encode())
+            server.send(package)
             package = f.read(PKG_SIZE)
         print(">> File uploaded.")
     except:
@@ -278,7 +278,7 @@ def main():
         read_sockets,write_socket, error_socket = select.select(sockets_list, [], [])
         for socks in read_sockets:
             if socks == server:
-                message = socks.recv(MSG_BUF_SIZE)
+                message = socks.recv(MSG_BUF_SIZE).decode()
                 if message[0] == "\n" or message[0] == "\b" or message[0] == "\0":
                     continue
                 print(message)
@@ -304,16 +304,16 @@ def main():
                         temp = os.stat(file_dir)
                         fileSize = temp.st_size
                         server.send(FILE_UPLOADING.encode())
-                        server.recv(SIG_LENGTH)
+                        server.recv(SIG_LENGTH).decode()
                         server.send(fileName[-1].encode())
-                        server.recv(SIG_LENGTH)
+                        server.recv(SIG_LENGTH).decode()
                         server.send(str(fileSize).encode())
                         sendFile(f)
                         f.close()
 
                     elif message == ":df\n":  # download file from cloud
                         server.send(FILE_REQUEST.encode())
-                        message = server.recv(MSG_BUF_SIZE)
+                        message = server.recv(MSG_BUF_SIZE).decode()
                         if message == FAIL:
                             print(">> No file on cloud.")
                             continue
@@ -322,7 +322,7 @@ def main():
                         sys.stdout.flush()
                         fileName = sys.stdin.readline()[:-1]      # read the file name and send to the server
                         server.send(fileName.encode())
-                        message = server.recv(SIG_LENGTH)
+                        message = server.recv(SIG_LENGTH).decode()
                         server.send(DONE.encode())
                         if message == DONE:
                             receiveFile(fileName)
@@ -330,7 +330,7 @@ def main():
                             print(">> File reception failed :(" + message)
                     elif message == ":rf\n":  # user want to remove a self uploaded file from server
                         server.send(FILE_REMOVE.encode())
-                        message = server.recv(SIG_LENGTH)
+                        message = server.recv(SIG_LENGTH).decode()
                         server.send(DONE.encode())
                         if message == FAIL:
                             print(">> There are no files uploaded by you on cloud.")

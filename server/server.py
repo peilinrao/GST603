@@ -40,22 +40,22 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
              done. Notice other users about arrival of a file.
 '''
 def receiveFile(conn, addr, name):
-    fileSize = int(conn.recv(MSG_BUF_SIZE))
+    fileSize = int(conn.recv(MSG_BUF_SIZE).decode())
 
     print(">> " + user_name_dict[conn] + " uploading file...")
     if name in cloud_files:
         if user_name_dict[conn] != cloud_files[name]:
-            conn.send(FAIL)
+            conn.send(FAIL.encode())
             return
         else:
-            conn.send(FILE_REMOVE)
+            conn.send(FILE_REMOVE.encode())
 
-            message = conn.recv(SIG_LENGTH)
+            message = conn.recv(SIG_LENGTH).decode()
             if message == FAIL:
                 print(">> User aborted uploading process.")
                 return
     else:
-        conn.send(DONE)
+        conn.send(DONE.encode())
 
 
     temp = 0
@@ -94,7 +94,7 @@ def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
         while package:
-            conn.send(package)
+            conn.send(package.encode())
             package = f.read(PKG_SIZE)
 
         print(">> File downloaded by " + user_name_dict[conn]+ ".")
@@ -116,13 +116,13 @@ def removeFile(conn):
         if cloud_files[fileName] == user_name_dict[conn]:
             message += fileName + "\n"
 
-    conn.send(message)
-    message = conn.recv(MSG_BUF_SIZE)
+    conn.send(message.encode())
+    message = conn.recv(MSG_BUF_SIZE).decode()
     try:
         os.remove(message)
         f = open("cloudFileDir.txt", "w")
     except:
-        conn.send(FAIL)
+        conn.send(FAIL.encode())
         return
 
     for fileName in cloud_files:
@@ -131,7 +131,7 @@ def removeFile(conn):
             f.write(temp)
 
     cloud_files.pop(message)
-    conn.send(DONE)
+    conn.send(DONE.encode())
     print(">> " + message + " has been removed.")
 
 '''
@@ -144,21 +144,21 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send(">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""")
+    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""").encode())
     broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
     broadcast(broadcast_m, conn)
-    conn.send("\0")
+    conn.send("\0".encode())
     #sends a message to the client whose user object is conn
     while True:
             try:
-                message = conn.recv(MSG_BUF_SIZE)
+                message = conn.recv(MSG_BUF_SIZE).decode()
                 if message:
                     if FILEMODE:
                         if message == FILE_UPLOADING: # a file is being uploaded
-                            conn.send(DONE)
+                            conn.send(DONE.encode())
                             try:
-                                fileName = conn.recv(MSG_BUF_SIZE) # read the file name
-                                conn.send(DONE)
+                                fileName = conn.recv(MSG_BUF_SIZE).decode() # read the file name
+                                conn.send(DONE.encode())
                                 receiveFile(conn, addr, fileName)
                             except:
                                 continue
@@ -168,28 +168,28 @@ def clientthread(conn, addr):
                             try:
                                 message = ""
                                 if not cloud_files:
-                                    conn.send(FAIL)
+                                    conn.send(FAIL.encode())
                                     continue
                                 for elements in cloud_files:
                                     message += elements + "\n"
                                 try:
-                                    conn.send(message)
+                                    conn.send(message.encode())
                                     # message = conn.recv(SIG_LENGTH)    # wait for response
-                                    message = conn.recv(MSG_BUF_SIZE)
+                                    message = conn.recv(MSG_BUF_SIZE).decode()
                                     temp = os.stat(message)
                                     fileSize = temp.st_size
                                     if message:
                                         try:
                                             f = open(message, "rb")
                                         except:
-                                            conn.send(FAIL)
-                                            conn.recv(SIG_LENGTH)
+                                            conn.send(FAIL.encode())
+                                            conn.recv(SIG_LENGTH).decode()
                                             continue
 
-                                        conn.send(DONE)
-                                        conn.recv(SIG_LENGTH)
-                                        conn.send(str(fileSize))
-                                        conn.recv(SIG_LENGTH)
+                                        conn.send(DONE.encode())
+                                        conn.recv(SIG_LENGTH).decode()
+                                        conn.send(str(fileSize).encode())
+                                        conn.recv(SIG_LENGTH).decode()
 
                                         sendFile(f, conn)
                                         f.close()
@@ -198,15 +198,15 @@ def clientthread(conn, addr):
                                 except:
                                     continue
                             except:
-                                conn.send(FILE_NO_EXIST)  # no cloud file available
+                                conn.send(FILE_NO_EXIST.encode())  # no cloud file available
                         elif message == FILE_REMOVE:
                             message = FAIL
                             for elements in cloud_files.values():
                                 if elements == user_name_dict[conn]:
                                     message = DONE
                                     break
-                            conn.send(message)
-                            conn.recv(SIG_LENGTH)
+                            conn.send(message.encode())
+                            conn.recv(SIG_LENGTH).decode()
                             if message == DONE:
                                 removeFile(conn)
                         else:
@@ -244,7 +244,7 @@ def broadcast(message,connection):
     for clients in list_of_clients:
         if clients!=connection:
             try:
-                clients.send(message)
+                clients.send(message.encode())
             except:
                 clients.close()
                 print(">> [Exception: cannot broadcast to "+ user_name_dict[clients] + "]")
@@ -359,19 +359,19 @@ SIDEEFFECTS: deal with user registration, created as a thread
 def registerpolling(conn,addr):
     while True:
             try:
-                message = conn.recv(MSG_BUF_SIZE)
+                message = conn.recv(MSG_BUF_SIZE).decode()
                 if message:
                     temp = message.split()
                     # prevent user w/ same name
                     while temp[0] in user_data_dict:
-                        conn.send(FAIL)
-                        message = conn.recv(MSG_BUF_SIZE)
+                        conn.send(FAIL.encode())
+                        message = conn.recv(MSG_BUF_SIZE).decode()
                         if message:
                             temp = message.split()
                         else:
                             remove(conn)
                             return
-                    conn.send(DONE)
+                    conn.send(DONE.encode())
                     createNewUsr("user_data.txt", temp[0], temp[1])
                     list_of_clients.append(conn)
                     user_name_dict[conn] = temp[0]
@@ -395,7 +395,7 @@ SIDEEFFECTS: deal with user sign in, created as a thread
 def signinpolling(conn, addr):
     while True:
             try:
-                message = conn.recv(MSG_BUF_SIZE)
+                message = conn.recv(MSG_BUF_SIZE).decode()
                 if message:
                     if message != NEW_USR:
                         temp = message.split()
@@ -408,11 +408,11 @@ def signinpolling(conn, addr):
                                 #prints the message and address of the user who just sent the message on the server terminal
                                 return
                             else:
-                                conn.send(PASS_ERR)
+                                conn.send(PASS_ERR.encode())
                                 print(">> Password not correct for " + temp[0] + ".")
                                 continue
                         else:
-                            conn.send(NO_EXIST)
+                            conn.send(NO_EXIST.encode())
                             # list_of_clients.remove(conn)
                             print(">> No existing user.\n")
                             continue
@@ -432,7 +432,6 @@ INPUT:       none
 OUTPUT:      none
 SIDEEFFECTS: main func
 '''
-
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 """
 the first argument AF_INET is the address domain of the socket. This is used when we have an Internet Domain
@@ -468,7 +467,7 @@ while True:
     print(">> " + addr[0] + " connected")
     # maintains a list of clients for ease of broadcasting a message to all available people in the chatroom
     # Prints the address of the person who just connected
-    message = conn.recv(200)
+    message = conn.recv(200).decode()
     if message:
         if message != NEW_USR:
             temp = message.split()
@@ -481,11 +480,11 @@ while True:
 
                     #creates and individual thread for every user that connects
                 else:
-                    conn.send(PASS_ERR)
+                    conn.send(PASS_ERR.encode())
                     print(">> Password not correct for " + temp[0] + ".")
                     start_new_thread(signinpolling,(conn,addr))
             else:
-                conn.send(NO_EXIST)
+                conn.send(NO_EXIST.encode())
                 print(">> No existing user.")
                 start_new_thread(signinpolling,(conn,addr))
         else:
