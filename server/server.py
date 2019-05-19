@@ -1,6 +1,6 @@
 import socket
 import select
-from thread import *
+from _thread import *
 import sys
 import os
 
@@ -19,6 +19,7 @@ MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 128
 STRFORMATSIZE = 37
+BINFORMATSIZE = 33
 FILEMODE = True
 SERVER_MODE = False
 
@@ -41,6 +42,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(conn, addr, name):
     fileSize = int(conn.recv(MSG_BUF_SIZE).decode())
+    print("fileSize:",fileSize)
 
     print(">> " + user_name_dict[conn] + " uploading file...")
     if name in cloud_files:
@@ -62,7 +64,7 @@ def receiveFile(conn, addr, name):
     f = open(name, "wb")
     package = conn.recv(PKG_SIZE)
     while True:
-        temp += sys.getsizeof(package) - STRFORMATSIZE
+        temp += sys.getsizeof(package) - BINFORMATSIZE
         f.write(package)
         if temp >= fileSize:
             print(">> Done receiving")
@@ -74,7 +76,7 @@ def receiveFile(conn, addr, name):
     # update the directory
     if name not in cloud_files:
         f = open("cloudFileDir.txt", "a+")
-        f.write(name + " " + user_name_dict[conn] + "\n")
+        f.write(name + "/" + user_name_dict[conn] + "\n")
         f.close()
         cloud_files[name] = user_name_dict[conn]
     message = ">> " + user_name_dict[conn] + " has uploaded " + name + " to cloud."
@@ -94,12 +96,12 @@ def sendFile(f, conn):
     try:
         package = f.read(PKG_SIZE)
         while package:
-            conn.send(package.encode())
+            conn.send(package)
             package = f.read(PKG_SIZE)
 
         print(">> File downloaded by " + user_name_dict[conn]+ ".")
     except:
-        print(">> [Error: file cannot be uploaded.]")
+        print(">> [Error: file cannot be downloaded.]")
         return
 
 
@@ -127,7 +129,7 @@ def removeFile(conn):
 
     for fileName in cloud_files:
         if fileName != message:
-            temp = fileName + " " + cloud_files[fileName] + "\n"
+            temp = fileName + "/" + cloud_files[fileName] + "\n"
             f.write(temp)
 
     cloud_files.pop(message)
@@ -303,7 +305,7 @@ def txtToDict(input, dict):
         return
 
     for line in f.readlines():
-        temp = line.split()
+        temp = line.split("/")
         dict[temp[0]] = temp[1]
 
     f.close()

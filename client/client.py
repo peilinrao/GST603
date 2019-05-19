@@ -22,6 +22,7 @@ MSG_BUF_SIZE = 2048
 PKG_SIZE = 4*2048
 SIG_LENGTH = 128
 STRFORMATSIZE = 37
+BINFORMATSIZE = 33
 FILEMODE = True
 SERVER_MODE = False
 
@@ -129,13 +130,13 @@ def receiveFile(name):
     f = open(name, "wb")
 
     temp = 0
-    package = server.recv(PKG_SIZE).decode()
+    package = server.recv(PKG_SIZE)
     while True:
-        temp += sys.getsizeof(package) - STRFORMATSIZE
+        temp += sys.getsizeof(package) - BINFORMATSIZE
         f.write(package)
         if temp >= fileSize:
             break
-        package = server.recv(PKG_SIZE).decode()
+        package = server.recv(PKG_SIZE)
     f.close()
     print(name + " has been successfully downloaded.")
 
