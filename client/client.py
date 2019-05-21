@@ -4,7 +4,6 @@ import sys
 import getpass
 import time
 import os
-from time import sleep
 
 # constants
 # constants
