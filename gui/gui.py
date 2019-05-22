@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QMutex, QMutexLocker
 import socket
+import select
 
 # constants
 FILE_NO_EXIST = "\b\b"
@@ -32,9 +33,12 @@ class serverThread(QThread):
     def run(self):
         while True:
             with QMutexLocker(io_lock):
-                message = server.recv(MSG_BUF_SIZE).decode()
-                if message[0] != "\n" and message[0] != "\b" and message[0] != "\0":
-                    self.change_value.emit(message)
+                sockets_list = [server]
+                read_sockets, write_socket, error_socket = select.select(sockets_list, [], [], 0)
+                for sock in read_sockets:
+                    message = server.recv(MSG_BUF_SIZE).decode()
+                    if message[0] != "\n" and message[0] != "\b" and message[0] != "\0":
+                        self.change_value.emit(message)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -71,13 +75,13 @@ class Ui_MainWindow(object):
 
 
     def input(self):
-        self.plainTextEdit.verticalScrollBar().setValue(self.plainTextEdit.verticalScrollBar().maximum())
         message = self.lineEdit.text()
         self.lineEdit.clear()
+        self.plainTextEdit.verticalScrollBar().setValue(self.plainTextEdit.verticalScrollBar().maximum())
         self.plainTextEdit.insertPlainText("<You> " + message + '\n')
 
         with QMutexLocker(io_lock):
-            server.send(message[:-1].encode())
+            server.send(message.encode())
 
     def printMSG(self, message):
         self.plainTextEdit.verticalScrollBar().setValue(self.plainTextEdit.verticalScrollBar().maximum())
