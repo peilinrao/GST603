@@ -72,8 +72,12 @@ class Ui_MainWindow(object):
 
     def input(self):
         self.plainTextEdit.verticalScrollBar().setValue(self.plainTextEdit.verticalScrollBar().maximum())
-        self.plainTextEdit.insertPlainText(self.lineEdit.text() + '\n')
+        message = self.lineEdit.text()
         self.lineEdit.clear()
+        self.plainTextEdit.insertPlainText("<You> " + message + '\n')
+
+        with QMutexLocker(io_lock):
+            server.send(message[:-1].encode())
 
     def printMSG(self, message):
         self.plainTextEdit.verticalScrollBar().setValue(self.plainTextEdit.verticalScrollBar().maximum())
