@@ -170,8 +170,8 @@ INPUT:       file handler
 OUTPUT:      none
 SIDEEFFECTS: upload the file to server
 '''
-def sendFile(f):
-    message = server.recv(SIG_LENGTH).decode()
+def sendFile(f, conn):
+    message = conn.recv(SIG_LENGTH).decode()
     if message == FAIL:
         print(">> File with the same name is already uploaded by other user. Rename the file and try again.")
         return
@@ -187,16 +187,16 @@ def sendFile(f):
             message = sys.stdin.readline()[:-1]
 
         if message == 'Y':
-            server.send(DONE.encode())
+            conn.send(DONE.encode())
         else:
-            server.send(FAIL.encode())
+            conn.send(FAIL.encode())
             print(">> You have aborted uploading process.")
             return
 
     try:
         package = f.read(PKG_SIZE)
         while package:
-            server.send(package)
+            conn.send(package)
             package = f.read(PKG_SIZE)
         print(">> File uploaded.")
     except:
@@ -307,9 +307,12 @@ def main():
                         server.recv(SIG_LENGTH).decode()
                         server.send(fileName[-1].encode())
                         server.recv(SIG_LENGTH).decode()
-                        server.send(str(fileSize).encode())
-                        sendFile(f)
+                        upServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        upServer.connect(("192.168.29.168", 7000))
+                        upServer.send(str(fileSize).encode())
+                        sendFile(f, upServer)
                         f.close()
+                        upServer.close()
 
                     elif message == ":df\n":  # download file from cloud
                         server.send(FILE_REQUEST.encode())

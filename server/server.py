@@ -42,7 +42,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(conn, addr, name):
     fileSize = int(conn.recv(MSG_BUF_SIZE).decode())
-    print("fileSize:",fileSize)
+    print("fileSize: ",fileSize)
 
     print(">> " + user_name_dict[conn] + " uploading file...")
     if name in cloud_files:
@@ -161,6 +161,106 @@ def clientthread(conn, addr):
                             try:
                                 fileName = conn.recv(MSG_BUF_SIZE).decode() # read the file name
                                 conn.send(DONE.encode())
+                                upConn, upAddr = server.accept()
+                                start_new_thread(receiveFile, (upConn, upAddr, fileName))
+                            except:
+                                continue
+                        elif message == FILE_REQUEST: # the client wants the file
+                            # give user the cloud file directory
+                            print(">> User requesting file...")
+                            try:
+                                message = ""
+                                if not cloud_files:
+                                    conn.send(FAIL.encode())
+                                    continue
+                                for elements in cloud_files:
+                                    message += elements + "\n"
+                                try:
+                                    conn.send(message.encode())
+                                    # message = conn.recv(SIG_LENGTH)    # wait for response
+                                    message = conn.recv(MSG_BUF_SIZE).decode()
+                                    temp = os.stat(message)
+                                    fileSize = temp.st_size
+                                    if message:
+                                        try:
+                                            f = open(message, "rb")
+                                        except:
+                                            conn.send(FAIL.encode())
+                                            conn.recv(SIG_LENGTH).decode()
+                                            continue
+
+                                        conn.send(DONE.encode())
+                                        conn.recv(SIG_LENGTH).decode()
+                                        conn.send(str(fileSize).encode())
+                                        conn.recv(SIG_LENGTH).decode()
+
+                                        sendFile(f, conn)
+                                        f.close()
+                                    else:
+                                        remove(conn)
+                                except:
+                                    continue
+                            except:
+                                conn.send(FILE_NO_EXIST.encode())  # no cloud file available
+                        elif message == FILE_REMOVE:
+                            message = FAIL
+                            for elements in cloud_files.values():
+                                if elements == user_name_dict[conn]:
+                                    message = DONE
+                                    break
+                            conn.send(message.encode())
+                            conn.recv(SIG_LENGTH).decode()
+                            if message == DONE:
+                                removeFile(conn)
+                        else:
+                            if message[0] == "\n":
+                                if len(message) == 1:
+                                    continue
+                                if message[1] == "\n":
+                                    continue
+                            message_to_send = "<" + user_name_dict[conn] + "> " + message
+                            print(message_to_send)
+                            broadcast(message_to_send,conn)
+                    else:
+                        if message[0] == "\n":
+                            if len(message) == 1:
+                                continue
+                            if message[1] == "\n":
+                                continue
+                        message_to_send = "<" + user_name_dict[conn] + "> " + message
+                        print(message_to_send)
+                        broadcast(message_to_send,conn)
+                else:
+                    remove(conn)
+            except:
+                continue
+
+"""
+'''
+clientthread(conn, addr):
+DESCRIPTION: a thread for client on the server
+INPUT:       conn: socket of the client
+             addr: IP address of the client
+OUTPUT:      none
+SIDEEFFECTS: check for client activities on the server, including messages,
+             file sending request and file downloading request
+'''
+def clientthread(conn, addr):
+    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""").encode())
+    broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
+    broadcast(broadcast_m, conn)
+    conn.send("\0".encode())
+    #sends a message to the client whose user object is conn
+    while True:
+            try:
+                message = conn.recv(MSG_BUF_SIZE).decode()
+                if message:
+                    if FILEMODE:
+                        if message == FILE_UPLOADING: # a file is being uploaded
+                            conn.send(DONE.encode())
+                            try:
+                                fileName = conn.recv(MSG_BUF_SIZE).decode() # read the file name
+                                conn.send(DONE.encode())
                                 receiveFile(conn, addr, fileName)
                             except:
                                 continue
@@ -233,6 +333,7 @@ def clientthread(conn, addr):
                     remove(conn)
             except:
                 continue
+"""
 
 '''
 broadcast(message,connection):
