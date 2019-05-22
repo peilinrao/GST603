@@ -246,7 +246,7 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""").encode())
+    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + ! Type ":h" for help!).encode())
     broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
     broadcast(broadcast_m, conn)
     conn.send("\0".encode())
