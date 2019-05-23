@@ -105,6 +105,8 @@ def sendFile(f, conn):
             package = f.read(PKG_SIZE)
 
         print(">> File downloaded by " + user_name_dict[conn]+ ".")
+        conn.recv(SIG_LENGTH)
+        conn.send(">> File donwloaded.".encode())
     except:
         print(">> [Error: file cannot be downloaded.]")
         return

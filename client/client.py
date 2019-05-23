@@ -137,7 +137,8 @@ def receiveFile(name):
             break
         package = server.recv(PKG_SIZE)
     f.close()
-    print(name + " has been successfully downloaded.")
+    conn.send(DONE.encode())
+    # print(name + " has been successfully downloaded.")
 
 '''
 removeFile():

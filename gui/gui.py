@@ -123,9 +123,52 @@ class Ui_fileWindow(object):
         if instr == FILE_UPLOADING:
             self.setupSend()
         elif instr == FILE_REQUEST:
-            self.receiveFile()
+            self.setupReceive()
         else:
             self.removeFile()
+
+    def setupReceive(self):
+        io_lock.lock()
+        server.send(FILE_REQUEST.encode())
+        message = server.recv(MSG_BUF_SIZE).decode()
+        if message == FAIL:
+            self.MSGlabel.setText("No file on cloud.")
+            self.okButton.clicked.connect(self.fileWindow.close)
+            return
+
+        temp = message.split('\n')
+        self.fileList.addItems(temp)
+        self.okButton.clicked.connect(self.receiveFile)
+
+    def receiveFile(self):
+        fileName = self.fileList.currentItem().text()
+        server.send(fileName.encode())
+        message = server.recv(SIG_LENGTH).decode()
+        server.send(DONE.encode())
+        if message != DONE:
+            self.MSGlabel.setText("File reception failed.")
+            self.okButton.clicked.connect(self.fileWindow.close)
+            return
+
+        fileSize = int(server.recv(MSG_BUF_SIZE).decode())
+        server.send((DONE).encode())
+        f = open("Downfile/" + fileName, "wb")
+        # print('1')
+
+        temp = 0
+        package = server.recv(PKG_SIZE)
+        while True:
+            temp += sys.getsizeof(package) - BINFORMATSIZE
+            f.write(package)
+            if temp >= fileSize:
+                break
+            package = server.recv(PKG_SIZE)
+
+        f.close()
+        server.send(DONE.encode())
+        io_lock.unlock()
+        self.fileWindow.close()
+
 
     def setupSend(self):
         temp = listdir("Upfile")
@@ -219,7 +262,7 @@ class Ui_MainWindow(object):
         # events
         self.lineEdit.returnPressed.connect(self.input)
         self.actionUpload.triggered.connect(self.sendFile)
-        # self.actionDownload.triggered.connect(self.receiveFile)
+        self.actionDownload.triggered.connect(self.receiveFile)
         # self.actionRemove.triggered.connect(self.removeFile)
 
         self.retranslateUi(MainWindow)
@@ -230,6 +273,12 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle("GST603")
+
+    def receiveFile(self):
+        self.fileWindow = QtWidgets.QMainWindow()
+        self.fileW = Ui_fileWindow()
+        self.fileW.setupfileWindow(self.fileWindow, FILE_REQUEST)
+        self.fileWindow.show()
 
     def sendFile(self):
         self.fileWindow = QtWidgets.QMainWindow()
