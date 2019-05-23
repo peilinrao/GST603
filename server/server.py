@@ -63,6 +63,7 @@ def receiveFile(conn, addr, name):
     print('1')
     temp = 0
     f = open(name, "wb")
+    print('2')
     package = conn.recv(PKG_SIZE)
     while True:
         temp += sys.getsizeof(package) - BINFORMATSIZE

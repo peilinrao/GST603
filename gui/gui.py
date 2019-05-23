@@ -104,12 +104,14 @@ class Ui_fileWindow(object):
         self.horizontalLayout.addWidget(self.frame_2)
         fileWindow.setCentralWidget(self.centralwidget)
 
+        #events
         self.cancelButton.clicked.connect(fileWindow.close)
 
         self.retranslatefileWindow(fileWindow)
         QtCore.QMetaObject.connectSlotsByName(fileWindow)
 
         self.fileHandle(instr)
+        self.fileWindow = fileWindow
 
     def fileHandle(self, instr):
         if instr == FILE_UPLOADING:
@@ -123,13 +125,14 @@ class Ui_fileWindow(object):
         temp = listdir("Upfile")
         self.fileList.addItems(temp[1:])
         self.okButton.clicked.connect(self.sendFile)
+        self.fileList.returnPressed.connect(self.sendFile)
 
     def sendFile(self):
-        fileName = "Upfile/" + self.fileList.currentItem().text()
-        temp = os.stat(fileName)
+        fileName = self.fileList.currentItem().text()
+        temp = os.stat("Upfile/" + fileName)
         fileSize = temp.st_size
         try:
-            f = open(fileName, "rb")
+            f = open("Upfile/" + fileName, "rb")
         except:
             self.MSGlabel.setText("File broken.")
             return
@@ -152,13 +155,13 @@ class Ui_fileWindow(object):
 
             try:
                 package = f.read(PKG_SIZE)
-                print('1')
+                # print('1')
                 while package:
                     server.send(package)
-                    print('2')
+                    # print('2')
                     package = f.read(PKG_SIZE)
                 self.MSGlabel.setText("File uploaded.")
-                self.okButton.clicked.connect(fileWindow.close)
+                self.okButton.clicked.connect(self.fileWindow.close)
             except:
                 self.MSGlabel.setText("Upload failed.")
                 return
