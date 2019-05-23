@@ -42,44 +42,6 @@ class serverThread(QThread):
                     if message[0] != "\n" and message[0] != "\b" and message[0] != "\0":
                         self.change_value.emit(message)
 
-class Ui_FileTransfer(object):
-    def setupProgressBar(self, FileTransfer, fileSize):
-        FileTransfer.setObjectName("FileTransfer")
-        FileTransfer.resize(372, 102)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(FileTransfer.sizePolicy().hasHeightForWidth())
-        FileTransfer.setSizePolicy(sizePolicy)
-        self.centralwidget = QtWidgets.QWidget(FileTransfer)
-        self.centralwidget.setObjectName("centralwidget")
-        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(QtCore.QRect(50, 20, 271, 23))
-        self.progressBar.setMaximum(fileSize)
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setInvertedAppearance(False)
-        self.progressBar.setObjectName("progressBar")
-        self.MSGlabel = QtWidgets.QLabel(self.centralwidget)
-        self.MSGlabel.setGeometry(QtCore.QRect(50, 40, 251, 20))
-        self.MSGlabel.setText("In progress... 0/" + str(fileSize) + " Bytes")
-        self.MSGlabel.setObjectName("MSGlabel")
-        FileTransfer.setCentralWidget(self.centralwidget)
-
-        self.retransBar(FileTransfer)
-        QtCore.QMetaObject.connectSlotsByName(FileTransfer)
-
-        self.fileSize = fileSize
-
-    def update(self,cnt):
-        self.MSGlabel.setText("In progress... " +str(cnt) +  "/" + str(fileSize) + " Bytes")
-        self.progresBar.setValue(cnt)
-
-
-    def retransBar(self, FileTransfer):
-        _translate = QtCore.QCoreApplication.translate
-        FileTransfer.setWindowTitle(_translate("FileTransfer", "File Transfer"))
-
-
 class Ui_fileWindow(object):
     def setupfileWindow(self, fileWindow, instr):
         fileWindow.setObjectName("fileWindow")
@@ -101,6 +63,12 @@ class Ui_fileWindow(object):
         self.MSGlabel.setText("")
         self.MSGlabel.setObjectName("MSGlabel")
         self.verticalLayout.addWidget(self.MSGlabel)
+
+        self.fileBar = QtWidgets.QProgressBar(self.frame)
+        # self.fileBar.setProperty("value", 0)
+        self.fileBar.setObjectName("fileBar")
+        self.verticalLayout.addWidget(self.fileBar)
+
         self.horizontalLayout.addWidget(self.frame)
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
         self.frame_2.setFrameShape(QtWidgets.QFrame.NoFrame)
@@ -174,6 +142,7 @@ class Ui_fileWindow(object):
             self.MSGlabel.setText("File broken.")
             return
 
+
         with QMutexLocker(io_lock):
             server.send(FILE_UPLOADING.encode())
             server.recv(SIG_LENGTH)
@@ -190,22 +159,17 @@ class Ui_fileWindow(object):
                 self.MSGlabel.setText("Overwriting file.")
                 server.send(DONE.encode())
 
-            self.transferWindow = QtWidgets.QMainWindow()
-            self.fileT = Ui_FileTransfer()
-            self.fileT.setupProgressBar(self.transferWindow, fileSize)
-            temp = 0
-            self.transferWindow.show()
+            self.fileBar.setMaximum(fileSize)
 
             package = f.read(PKG_SIZE)
-            print('1')
+            temp = 0
+            # print('1')
             while package:
                 server.send(package)
-                temp += PKG_SIZE
-                self.fileT.update(temp)
+                self.fileBar.setValue(temp)
                 package = f.read(PKG_SIZE)
-            self.MSGlabel.setText("File uploaded.")
-            self.okButton.clicked.connect(self.fileWindow.close)
-            self.transferWindow.close()
+
+            self.fileWindow.close()
             """
             except:
                 self.MSGlabel.setText("Upload failed.")
@@ -558,8 +522,10 @@ class Ui_loginWindow(object):
 
 
 if __name__ == "__main__":
-    IP_address = "192.168.29.168"
-    Port = int("7000")
+    # IP_address = "96.63.228.98"
+    # Port = 4200
+    IP_address = "192.168.29.133"
+    Port = 7000
     server.connect((IP_address, Port))
     app = QtWidgets.QApplication(sys.argv)
     loginWindow = QtWidgets.QMainWindow()

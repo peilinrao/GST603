@@ -67,7 +67,7 @@ def receiveFile(conn, addr, name):
     package = conn.recv(PKG_SIZE)
     while True:
         temp += sys.getsizeof(package) - BINFORMATSIZE
-        print(temp)
+        # print(temp)
         f.write(package)
         if temp >= fileSize:
             print(">> Done receiving")
