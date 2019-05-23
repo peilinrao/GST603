@@ -136,6 +136,7 @@ def removeFile(conn):
     conn.send(DONE.encode())
     print(">> " + message + " has been removed.")
 
+"""
 '''
 clientthread(conn, addr):
 DESCRIPTION: a thread for client on the server
@@ -146,7 +147,7 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""").encode())
+    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + ! Type ":h" for help!).encode())
     broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
     broadcast(broadcast_m, conn)
     conn.send("\0".encode())
@@ -234,8 +235,8 @@ def clientthread(conn, addr):
                     remove(conn)
             except:
                 continue
-
 """
+
 '''
 clientthread(conn, addr):
 DESCRIPTION: a thread for client on the server
@@ -246,7 +247,7 @@ SIDEEFFECTS: check for client activities on the server, including messages,
              file sending request and file downloading request
 '''
 def clientthread(conn, addr):
-    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + ! Type ":h" for help!).encode())
+    conn.send((">> Welcome to GST603 Chatroom, " + user_name_dict[conn] + """! Type ":h" for help!""").encode())
     broadcast_m = ">> " + user_name_dict[conn] + " has entered chatroom."
     broadcast(broadcast_m, conn)
     conn.send("\0".encode())
@@ -333,7 +334,7 @@ def clientthread(conn, addr):
                     remove(conn)
             except:
                 continue
-"""
+
 
 '''
 broadcast(message,connection):

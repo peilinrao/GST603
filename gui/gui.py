@@ -3,6 +3,8 @@ import sys
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QMutex, QMutexLocker
 import socket
 import select
+import os
+from os import listdir
 
 # constants
 FILE_NO_EXIST = "\b\b"
@@ -40,24 +42,165 @@ class serverThread(QThread):
                     if message[0] != "\n" and message[0] != "\b" and message[0] != "\0":
                         self.change_value.emit(message)
 
+class Ui_fileWindow(object):
+    def setupfileWindow(self, fileWindow):
+        fileWindow.setObjectName("fileWindow")
+        fileWindow.resize(458, 390)
+        self.centralwidget = QtWidgets.QWidget(fileWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.frame.setObjectName("frame")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.frame)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.listWidget = QtWidgets.QListWidget(self.frame)
+        self.listWidget.setObjectName("listWidget")
+        self.verticalLayout.addWidget(self.listWidget)
+        self.MSGlabel = QtWidgets.QLabel(self.frame)
+        self.MSGlabel.setText("")
+        self.MSGlabel.setObjectName("MSGlabel")
+        self.verticalLayout.addWidget(self.MSGlabel)
+        self.horizontalLayout.addWidget(self.frame)
+        self.frame_2 = QtWidgets.QFrame(self.centralwidget)
+        self.frame_2.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.frame_2.setObjectName("frame_2")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.frame_2)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.okButton = QtWidgets.QPushButton(self.frame_2)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.okButton.sizePolicy().hasHeightForWidth())
+        self.okButton.setSizePolicy(sizePolicy)
+        self.okButton.setMaximumSize(QtCore.QSize(120, 16777215))
+        palette = QtGui.QPalette()
+        brush = QtGui.QBrush(QtGui.QColor(59, 176, 255))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(59, 176, 255))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(59, 176, 255))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
+        self.okButton.setPalette(palette)
+        self.okButton.setObjectName("okButton")
+        self.gridLayout_2.addWidget(self.okButton, 0, 0, 1, 1)
+        self.cancelButton = QtWidgets.QPushButton(self.frame_2)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cancelButton.sizePolicy().hasHeightForWidth())
+        self.cancelButton.setSizePolicy(sizePolicy)
+        self.cancelButton.setMaximumSize(QtCore.QSize(120, 16777215))
+        self.cancelButton.setObjectName("cancelButton")
+        self.gridLayout_2.addWidget(self.cancelButton, 1, 0, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
+        self.horizontalLayout.addWidget(self.frame_2)
+        fileWindow.setCentralWidget(self.centralwidget)
+
+        self.cancelButton.clicked.connect(self.close())
+
+        self.retranslateUi(fileWindow)
+        QtCore.QMetaObject.connectSlotsByName(fileWindow)
+
+
+    def fileHandle(self, instr):
+        if instr == FILE_UPLOADING:
+            self.setupSend()
+        elif instr == FILE_REQUEST:
+            self.receiveFile()
+        else:
+            self.removeFile()
+
+    def setupSend(self):
+        temp = listdir("Upfile")
+        self.fileList.addItems(temp[1:])
+        self.okButton.clicked.connect(self.sendFile)
+
+    def sendFile(self):
+        fileName = self.fileList.currentItem().text()
+        temp = os.stat("Upfile/"+fileName)
+        fileSize = temp.st_size
+        try:
+            f = open(fileName, "rb")
+        except:
+            self.MSGlabel.setText("File broken.")
+            return
+
+        with QMutexLocker(io_lock):
+            server.send(FILE_UPLOADING.encode())
+            server.recv(SIG_LENGTH)
+            server.send(fileName.encode())
+            server.recv(SIG_LENGTH)
+            server.send(str(fileSize).encode())
+
+            message = server.recv(SIG_LENGTH).decode()
+
+            if message == FAIL:
+                self.MSGlabel.setText("File name exists.")
+                return
+            elif message == FILE_REMOVE:
+                server.send(DONE.encode())
+
+            try:
+                package = f.read(PKG_SIZE)
+                while package:
+                    server.send(package)
+                    package = f.read(PKG_SIZE)
+                self.close()
+            except:
+                self.MSGlabel.setText("Upload failed.")
+                return
+
+    def retranslatefileWindow(self, fileWindow):
+        _translate = QtCore.QCoreApplication.translate
+        fileWindow.setWindowTitle(_translate("fileWindow", "fileWindow"))
+        self.okButton.setText(_translate("fileWindow", "Ok"))
+        self.cancelButton.setText(_translate("fileWindow", "Cancel"))
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("GST603")
-        MainWindow.resize(577, 455)
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(577, 465)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
         self.plainTextEdit = QtWidgets.QPlainTextEdit(self.centralwidget)
-        self.plainTextEdit.setReadOnly(True)
         self.plainTextEdit.setObjectName("plainTextEdit")
         self.verticalLayout.addWidget(self.plainTextEdit)
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setObjectName("lineEdit")
         self.verticalLayout.addWidget(self.lineEdit)
         MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 577, 22))
+        self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
+        MainWindow.setMenuBar(self.menubar)
+        self.actionUpload = QtWidgets.QAction(MainWindow)
+        self.actionUpload.setObjectName("actionUpload")
+        self.actionDownload = QtWidgets.QAction(MainWindow)
+        self.actionDownload.setObjectName("actionDownload")
+        self.actionRemove = QtWidgets.QAction(MainWindow)
+        self.actionRemove.setObjectName("actionRemove")
+        self.menu.addAction(self.actionUpload)
+        self.menu.addAction(self.actionDownload)
+        self.menu.addAction(self.actionRemove)
+        self.menubar.addAction(self.menu.menuAction())
 
+        # events
         self.lineEdit.returnPressed.connect(self.input)
+        self.actionUpload.triggered.connect(self.sendFile)
+        self.actionDownload.triggered.connect(self.receiveFile)
+        self.actionRemove.triggered.connect(self.removeFile)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -68,11 +211,21 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle("GST603")
 
+    def sendFile(self):
+        self.fileWindow = QtWidgets.QMainWindow()
+        self.fileW = Ui_fileWindow()
+        self.fileW.setupfileWindow(self.fileWindow)
+        self.fileWindow.show()
+
+        self.fileInstr = pyqtSignal(str)
+        self.fileInstr.connect(self.fileW.fileHandle)
+        self.fileW.close.connect(self.closeFileWindow)
+        self.fileInstr.emit(FILE_UPLOADING)
+
     def startInput(self):
         self.inthread = serverThread()
         self.inthread.change_value.connect(self.printMSG)
         self.inthread.start()
-
 
     def input(self):
         message = self.lineEdit.text()
