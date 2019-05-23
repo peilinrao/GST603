@@ -190,24 +190,22 @@ class Ui_fileWindow(object):
                 self.MSGlabel.setText("Overwriting file.")
                 server.send(DONE.encode())
 
-            """
             self.transferWindow = QtWidgets.QMainWindow()
             self.fileT = Ui_FileTransfer()
             self.fileT.setupProgressBar(self.transferWindow, fileSize)
             temp = 0
             self.transferWindow.show()
-            """
 
             package = f.read(PKG_SIZE)
             print('1')
             while package:
                 server.send(package)
                 temp += PKG_SIZE
-                # self.fileT.update(temp)
+                self.fileT.update(temp)
                 package = f.read(PKG_SIZE)
             self.MSGlabel.setText("File uploaded.")
             self.okButton.clicked.connect(self.fileWindow.close)
-            # self.transferWindow.close()
+            self.transferWindow.close()
             """
             except:
                 self.MSGlabel.setText("Upload failed.")
