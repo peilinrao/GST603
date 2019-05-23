@@ -42,7 +42,7 @@ SIDEEFFECTS: store the uploaded file in cloud server. Notice the sender once
 '''
 def receiveFile(conn, addr, name):
     fileSize = int(conn.recv(MSG_BUF_SIZE).decode())
-    print(fileSize)
+    # print(fileSize)
     print("fileSize: ",fileSize)
 
     print(">> " + user_name_dict[conn] + " uploading file...")
@@ -60,7 +60,7 @@ def receiveFile(conn, addr, name):
     else:
         conn.send(DONE.encode())
 
-
+    print('1')
     temp = 0
     f = open(name, "wb")
     package = conn.recv(PKG_SIZE)

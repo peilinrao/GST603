@@ -147,12 +147,15 @@ class Ui_fileWindow(object):
                 self.MSGlabel.setText("File name exists.")
                 return
             elif message == FILE_REMOVE:
+                self.MSGlabel.setText("Overwriting file.")
                 server.send(DONE.encode())
 
             try:
                 package = f.read(PKG_SIZE)
+                print('1')
                 while package:
                     server.send(package)
+                    print('2')
                     package = f.read(PKG_SIZE)
                 self.MSGlabel.setText("File uploaded.")
                 self.okButton.clicked.connect(fileWindow.close)
