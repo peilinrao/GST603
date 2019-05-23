@@ -42,6 +42,44 @@ class serverThread(QThread):
                     if message[0] != "\n" and message[0] != "\b" and message[0] != "\0":
                         self.change_value.emit(message)
 
+class Ui_FileTransfer(object):
+    def setupProgressBar(self, FileTransfer, fileSize):
+        FileTransfer.setObjectName("FileTransfer")
+        FileTransfer.resize(372, 102)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(FileTransfer.sizePolicy().hasHeightForWidth())
+        FileTransfer.setSizePolicy(sizePolicy)
+        self.centralwidget = QtWidgets.QWidget(FileTransfer)
+        self.centralwidget.setObjectName("centralwidget")
+        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        self.progressBar.setGeometry(QtCore.QRect(50, 20, 271, 23))
+        self.progressBar.setMaximum(fileSize)
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setInvertedAppearance(False)
+        self.progressBar.setObjectName("progressBar")
+        self.MSGlabel = QtWidgets.QLabel(self.centralwidget)
+        self.MSGlabel.setGeometry(QtCore.QRect(50, 40, 251, 20))
+        self.MSGlabel.setText("In progress... 0/" + str(fileSize) + " Bytes")
+        self.MSGlabel.setObjectName("MSGlabel")
+        FileTransfer.setCentralWidget(self.centralwidget)
+
+        self.retransBar(FileTransfer)
+        QtCore.QMetaObject.connectSlotsByName(FileTransfer)
+
+        self.fileSize = fileSize
+
+    def update(self,cnt):
+        self.MSGlabel.setText("In progress... " +str(cnt) +  "/" + str(fileSize) + " Bytes")
+        self.progresBar.setValue(cnt)
+
+
+    def retransBar(self, FileTransfer):
+        _translate = QtCore.QCoreApplication.translate
+        FileTransfer.setWindowTitle(_translate("FileTransfer", "File Transfer"))
+
+
 class Ui_fileWindow(object):
     def setupfileWindow(self, fileWindow, instr):
         fileWindow.setObjectName("fileWindow")
@@ -125,7 +163,6 @@ class Ui_fileWindow(object):
         temp = listdir("Upfile")
         self.fileList.addItems(temp[1:])
         self.okButton.clicked.connect(self.sendFile)
-        self.fileList.returnPressed.connect(self.sendFile)
 
     def sendFile(self):
         fileName = self.fileList.currentItem().text()
@@ -153,18 +190,29 @@ class Ui_fileWindow(object):
                 self.MSGlabel.setText("Overwriting file.")
                 server.send(DONE.encode())
 
-            try:
+            """
+            self.transferWindow = QtWidgets.QMainWindow()
+            self.fileT = Ui_FileTransfer()
+            self.fileT.setupProgressBar(self.transferWindow, fileSize)
+            temp = 0
+            self.transferWindow.show()
+            """
+
+            package = f.read(PKG_SIZE)
+            print('1')
+            while package:
+                server.send(package)
+                temp += PKG_SIZE
+                # self.fileT.update(temp)
                 package = f.read(PKG_SIZE)
-                # print('1')
-                while package:
-                    server.send(package)
-                    # print('2')
-                    package = f.read(PKG_SIZE)
-                self.MSGlabel.setText("File uploaded.")
-                self.okButton.clicked.connect(self.fileWindow.close)
+            self.MSGlabel.setText("File uploaded.")
+            self.okButton.clicked.connect(self.fileWindow.close)
+            # self.transferWindow.close()
+            """
             except:
                 self.MSGlabel.setText("Upload failed.")
                 return
+            """
 
     def retranslatefileWindow(self, fileWindow):
         _translate = QtCore.QCoreApplication.translate

@@ -560,6 +560,7 @@ server.listen(100)
 #listens for 100 active connections. This number can be increased as per convenience
 readUsrData("user_data.txt")
 txtToDict("cloudFileDir.txt", cloud_files)
+print(cloud_files)
 print(">> GST603 server booted!")
 
 while True:
