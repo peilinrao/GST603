@@ -153,7 +153,8 @@ class Ui_fileWindow(object):
                 while package:
                     server.send(package)
                     package = f.read(PKG_SIZE)
-                self.close()
+                self.MSGlabel.setText("File uploaded.")
+                self.okButton.clicked.connect(self.close())
             except:
                 self.MSGlabel.setText("Upload failed.")
                 return
