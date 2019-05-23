@@ -158,10 +158,6 @@ def removeFile():
         message = sys.stdin.readline()[:-1]
         server.send((message).encode())
         message = server.recv(SIG_LENGTH).decode()
-        if message == FAIL:
-            print(">> File failed to remove.")
-        else:
-            print(">> File successfully removed.")
 
 
 '''

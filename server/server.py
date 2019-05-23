@@ -131,7 +131,7 @@ def removeFile(conn):
         os.remove(message)
         f = open("cloudFileDir.txt", "w")
     except:
-        conn.send(FAIL.encode())
+        conn.send(">> File failed to remove.".encode())
         return
 
     for fileName in cloud_files:
@@ -140,7 +140,7 @@ def removeFile(conn):
             f.write(temp)
 
     cloud_files.pop(message)
-    conn.send(DONE.encode())
+    conn.send(">> File successfully removed.".encode())
     print(">> " + message + " has been removed.")
 
 """

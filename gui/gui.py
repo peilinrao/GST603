@@ -125,7 +125,29 @@ class Ui_fileWindow(object):
         elif instr == FILE_REQUEST:
             self.setupReceive()
         else:
-            self.removeFile()
+            self.setupRemove()
+
+    def setupRemove(self):
+        io_lock.lock()
+        server.send(FILE_REMOVE.encode())
+        message = server.recv(SIG_LENGTH).decode()
+        server.send(DONE.encode())
+        if message == FAIL:
+            self.MSGlabel.setText("No file eligible to remove.")
+            self.okButton.clicked.connect(self.fileWindow.close)
+            return
+
+        message = server.recv(MSG_BUF_SIZE).decode()
+        temp = message.split('\n')
+        self.fileList.addItems(temp)
+        self.okButton.clicked.connect(self.removeFile)
+
+    def removeFile(self):
+        fileName = self.fileList.currentItem().text()
+        server.send(fileName.encode())
+        io_lock.unlock()
+        self.fileWindow.close()
+
 
     def setupReceive(self):
         io_lock.lock()
@@ -134,6 +156,7 @@ class Ui_fileWindow(object):
         if message == FAIL:
             self.MSGlabel.setText("No file on cloud.")
             self.okButton.clicked.connect(self.fileWindow.close)
+            io_lock.unlock()
             return
 
         temp = message.split('\n')
@@ -148,6 +171,7 @@ class Ui_fileWindow(object):
         if message != DONE:
             self.MSGlabel.setText("File reception failed.")
             self.okButton.clicked.connect(self.fileWindow.close)
+            io_lock.unlock()
             return
 
         fileSize = int(server.recv(MSG_BUF_SIZE).decode())
@@ -263,7 +287,7 @@ class Ui_MainWindow(object):
         self.lineEdit.returnPressed.connect(self.input)
         self.actionUpload.triggered.connect(self.sendFile)
         self.actionDownload.triggered.connect(self.receiveFile)
-        # self.actionRemove.triggered.connect(self.removeFile)
+        self.actionRemove.triggered.connect(self.removeFile)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -273,6 +297,12 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle("GST603")
+
+    def removeFile(self):
+        self.fileWindow = QtWidgets.QMainWindow()
+        self.fileW = Ui_fileWindow()
+        self.fileW.setupfileWindow(self.fileWindow, FILE_REMOVE)
+        self.fileWindow.show()
 
     def receiveFile(self):
         self.fileWindow = QtWidgets.QMainWindow()
