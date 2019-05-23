@@ -86,6 +86,8 @@ def receiveFile(conn, addr, name):
     print(message)
 
     broadcast(message, conn) # tell all clients a cloud file has been uploaded
+    message = ">> File uploaded."
+    conn.send(message.encode())
 
 
 '''
