@@ -43,7 +43,7 @@ class serverThread(QThread):
                         self.change_value.emit(message)
 
 class Ui_fileWindow(object):
-    def setupfileWindow(self, fileWindow):
+    def setupfileWindow(self, fileWindow, instr):
         fileWindow.setObjectName("fileWindow")
         fileWindow.resize(458, 390)
         self.centralwidget = QtWidgets.QWidget(fileWindow)
@@ -56,9 +56,9 @@ class Ui_fileWindow(object):
         self.frame.setObjectName("frame")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.listWidget = QtWidgets.QListWidget(self.frame)
-        self.listWidget.setObjectName("listWidget")
-        self.verticalLayout.addWidget(self.listWidget)
+        self.fileList = QtWidgets.QListWidget(self.frame)
+        self.fileList.setObjectName("listWidget")
+        self.verticalLayout.addWidget(self.fileList)
         self.MSGlabel = QtWidgets.QLabel(self.frame)
         self.MSGlabel.setText("")
         self.MSGlabel.setObjectName("MSGlabel")
@@ -104,11 +104,12 @@ class Ui_fileWindow(object):
         self.horizontalLayout.addWidget(self.frame_2)
         fileWindow.setCentralWidget(self.centralwidget)
 
-        self.cancelButton.clicked.connect(self.close())
+        self.cancelButton.clicked.connect(fileWindow.close)
 
-        self.retranslateUi(fileWindow)
+        self.retranslatefileWindow(fileWindow)
         QtCore.QMetaObject.connectSlotsByName(fileWindow)
 
+        self.fileHandle(instr)
 
     def fileHandle(self, instr):
         if instr == FILE_UPLOADING:
@@ -124,8 +125,8 @@ class Ui_fileWindow(object):
         self.okButton.clicked.connect(self.sendFile)
 
     def sendFile(self):
-        fileName = self.fileList.currentItem().text()
-        temp = os.stat("Upfile/"+fileName)
+        fileName = "Upfile/" + self.fileList.currentItem().text()
+        temp = os.stat(fileName)
         fileSize = temp.st_size
         try:
             f = open(fileName, "rb")
@@ -154,7 +155,7 @@ class Ui_fileWindow(object):
                     server.send(package)
                     package = f.read(PKG_SIZE)
                 self.MSGlabel.setText("File uploaded.")
-                self.okButton.clicked.connect(self.close())
+                self.okButton.clicked.connect(fileWindow.close)
             except:
                 self.MSGlabel.setText("Upload failed.")
                 return
@@ -174,6 +175,7 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
         self.plainTextEdit = QtWidgets.QPlainTextEdit(self.centralwidget)
+        self.plainTextEdit.setReadOnly(True)
         self.plainTextEdit.setObjectName("plainTextEdit")
         self.verticalLayout.addWidget(self.plainTextEdit)
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
@@ -181,16 +183,17 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.lineEdit)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setNativeMenuBar(False)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 577, 22))
         self.menubar.setObjectName("menubar")
-        self.menu = QtWidgets.QMenu(self.menubar)
-        self.menu.setObjectName("menu")
+        self.menu = self.menubar.addMenu("File")
+        # self.menu.setObjectName("menu")
         MainWindow.setMenuBar(self.menubar)
-        self.actionUpload = QtWidgets.QAction(MainWindow)
+        self.actionUpload = QtWidgets.QAction("Upload", MainWindow)
         self.actionUpload.setObjectName("actionUpload")
-        self.actionDownload = QtWidgets.QAction(MainWindow)
+        self.actionDownload = QtWidgets.QAction("Download", MainWindow)
         self.actionDownload.setObjectName("actionDownload")
-        self.actionRemove = QtWidgets.QAction(MainWindow)
+        self.actionRemove = QtWidgets.QAction("Remove", MainWindow)
         self.actionRemove.setObjectName("actionRemove")
         self.menu.addAction(self.actionUpload)
         self.menu.addAction(self.actionDownload)
@@ -200,8 +203,8 @@ class Ui_MainWindow(object):
         # events
         self.lineEdit.returnPressed.connect(self.input)
         self.actionUpload.triggered.connect(self.sendFile)
-        self.actionDownload.triggered.connect(self.receiveFile)
-        self.actionRemove.triggered.connect(self.removeFile)
+        # self.actionDownload.triggered.connect(self.receiveFile)
+        # self.actionRemove.triggered.connect(self.removeFile)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -215,13 +218,8 @@ class Ui_MainWindow(object):
     def sendFile(self):
         self.fileWindow = QtWidgets.QMainWindow()
         self.fileW = Ui_fileWindow()
-        self.fileW.setupfileWindow(self.fileWindow)
+        self.fileW.setupfileWindow(self.fileWindow, FILE_UPLOADING)
         self.fileWindow.show()
-
-        self.fileInstr = pyqtSignal(str)
-        self.fileInstr.connect(self.fileW.fileHandle)
-        self.fileW.close.connect(self.closeFileWindow)
-        self.fileInstr.emit(FILE_UPLOADING)
 
     def startInput(self):
         self.inthread = serverThread()
