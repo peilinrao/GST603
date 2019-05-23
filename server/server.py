@@ -60,10 +60,10 @@ def receiveFile(conn, addr, name):
     else:
         conn.send(DONE.encode())
 
-    print('1')
+    # print('1')
     temp = 0
     f = open(name, "wb")
-    print('2')
+    # print('2')
     package = conn.recv(PKG_SIZE)
     while True:
         temp += sys.getsizeof(package) - BINFORMATSIZE
