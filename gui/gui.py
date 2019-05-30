@@ -601,10 +601,8 @@ class Ui_loginWindow(object):
 
 
 if __name__ == "__main__":
-    # IP_address = "96.63.228.98"
-    # Port = 4200
-    IP_address = "192.168.29.133"
-    Port = 7000
+    IP_address = str(sys.argv[1])
+    Port = int(sys.argv[2])
     server.connect((IP_address, Port))
     app = QtWidgets.QApplication(sys.argv)
     loginWindow = QtWidgets.QMainWindow()
