@@ -14,8 +14,12 @@ Please note that although GST603 is totally free to use, the developers are payi
 # How to join the chatroom via script
 Once you are granted access from the developers, you will have the IP address and the port that can be used to connect to the server. Please run the script "client.py" from the folder "client" with python 3.
 
-Then you should:
-1. Enter the IP and the port as asked
+# How to join the chatroom via GUI
+Once you are granted access from the developers, you will have the IP address and the port that can be used to connect to the server. Please install pyqt5 library for python 3 and run the script "gui.py" from the folder "client" with python 3.
+
+# How to start chatting
+After you have run the script of GUI, Then you should:
+1. Enter the IP and the port as asked.
 2. Enter your username and the password to sign in or enter ":S" to sign up.
 3. Start chatting!
 
