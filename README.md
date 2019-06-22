@@ -4,7 +4,6 @@ GST603 is an online chatroom developed by Jiyu Hu and Peilin Rao. It is named by
 It supports:
 1. Multithread group chat.
 2. Uploading and downloading file in the group chat.
-3. Voice messages(developing)
 
 # How to get access
 If you are interested in using GST603 and want to access the server to join our chat, please send an Email to Peilin Rao (pelinium@gmail.com) with title "GST603 request".
